@@ -1,0 +1,5 @@
+.env
+supabase.exe
+node_modules/
+.DS_Store
+.gemini/
