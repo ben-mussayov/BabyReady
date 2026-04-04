@@ -1,0 +1,6 @@
+0000000000000000000000000000000000000000 9b9e38bf2d426aa364d8dbbaa3f7e8ce0f2a9373 ben-mussayov <benmussyaov@email.com> 1775211194 +0300	commit (initial): Initial commit
+9b9e38bf2d426aa364d8dbbaa3f7e8ce0f2a9373 9b9e38bf2d426aa364d8dbbaa3f7e8ce0f2a9373 ben-mussayov <benmussyaov@email.com> 1775211366 +0300	Branch: renamed refs/heads/master to refs/heads/main
+9b9e38bf2d426aa364d8dbbaa3f7e8ce0f2a9373 b685d8ee5c85d2768e378c869d340fd32e47d475 ben-mussayov <benmussyaov@email.com> 1775214775 +0300	commit: Rename frontend to index.html for Netlify
+b685d8ee5c85d2768e378c869d340fd32e47d475 733ecc7679d1ff38782e4e37eb17804381c28d1e ben-mussayov <benmussyaov@email.com> 1775235724 +0300	commit: feat(ui): refine product dashboard and admin tools
+733ecc7679d1ff38782e4e37eb17804381c28d1e 96ac040f8b0684f7cabe4d1ba39e6389f3fcb53a ben-mussayov <benmussyaov@email.com> 1775235767 +0300	commit: refactor(scraper): improve HTML parsing fallback to retrieve images natively
+96ac040f8b0684f7cabe4d1ba39e6389f3fcb53a 2bee1b4ec534c02c9918ea3adab52a85cd7949f0 ben-mussayov <benmussyaov@email.com> 1775237007 +0300	commit: feat(ui): improve add-product flow and preserve expanded row state

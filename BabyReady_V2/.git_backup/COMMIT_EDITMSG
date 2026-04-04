@@ -1,0 +1,8 @@
+feat(ui): improve add-product flow and preserve expanded row state
+
+- Add product (new mode): Now fetches data first from the URL automatically,
+  shows a preview with Approve button. Manual brand/model override only revealed
+  if user clicks 'Not right - edit manually', removing the need to pre-enter anything.
+- Expanded product rows now stay open after adding a price or approving
+  an item. Open state is tracked in S.openItemId and restored after list re-renders,
+  including the parent category accordion being kept open.

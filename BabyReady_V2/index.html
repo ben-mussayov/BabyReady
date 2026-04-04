@@ -1,0 +1,2171 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>BabyReady 🍼</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f2ee;--surf:#ffffff;--s2:#f9f8f5;--s3:#f0ede8;
+  --brd:#e2ddd6;--brd2:#cdc8bf;
+  --tx:#1c1a17;--t2:#6b6660;--t3:#a39e98;
+  --grn:#1a5c3a;--gl:#e8f4ee;--gd:#134528;
+  --red:#b83232;--rl:#fdecea;
+  --org:#c45c0a;--ol:#fef0e6;
+  --ylw:#9e6c00;--yl:#fef8e6;
+  --gold:#9e7200;--goldl:#fef9e6;
+  --r:12px;--rs:8px;--rl2:16px;
+  --shadow:0 1px 4px rgba(0,0,0,.08);
+  --shadow2:0 4px 16px rgba(0,0,0,.12);
+}
+body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;direction:rtl}
+
+/* ─── Layout ─── */
+.center{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(135deg,#e4f0e8 0%,var(--bg) 60%)}
+.card{background:var(--surf);border:1px solid var(--brd);border-radius:var(--rl2);padding:32px;box-shadow:var(--shadow2)}
+.csm{max-width:420px;width:100%}
+
+/* App Container Layout */
+.app-container{display:flex;min-height:100vh;flex-direction:row}
+.app-sidebar{width:64px;background:var(--surf);border-left:1px solid var(--brd);transition:width 0.3s cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;flex-shrink:0;z-index:101;box-shadow:var(--shadow);position:sticky;top:0;height:100vh;overflow-y:auto}
+.app-sidebar.expanded{width:220px}
+.app-content{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--bg)}
+
+/* Sidebar Elements */
+.sb-top{padding:16px;display:flex;align-items:center;gap:12px;color:var(--grn);border-bottom:1px solid var(--brd);font-size:16px;font-weight:800;white-space:nowrap;overflow:hidden;letter-spacing:-.3px;height:56px}
+.sb-top i{font-size:22px;width:24px;text-align:center;flex-shrink:0;font-style:normal;cursor:pointer}
+.sb-top-text{opacity:0;transition:opacity 0.2s}
+.app-sidebar.expanded .sb-top-text{opacity:1;transition:opacity 0.3s 0.1s}
+
+.sb-menu{padding-top:10px}
+.sb-item{padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;color:var(--t2);transition:background 0.15s,color 0.15s;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;border-right:3px solid transparent}
+.sb-item i{font-size:20px;width:24px;text-align:center;flex-shrink:0;font-style:normal}
+.sb-item.on{background:var(--gl);color:var(--grn);border-right:3px solid var(--grn)}
+.sb-item:hover:not(.on){background:var(--s2);color:var(--tx)}
+.sb-item-text{opacity:0;transition:opacity 0.2s}
+.app-sidebar.expanded .sb-item-text{opacity:1;transition:opacity 0.3s 0.1s}
+
+.sb-foot{padding:8px 0;border-top:1px solid var(--brd)}
+
+/* Topbar & Main */
+.topbar{background:var(--surf);border-bottom:1px solid var(--brd);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
+.tbl{font-size:17px;font-weight:800;color:var(--grn);display:flex;align-items:center;gap:8px;letter-spacing:-.3px}
+.tbr{display:flex;align-items:center;gap:8px}
+.main{max-width:1100px;margin:0 auto;padding:20px;width:100%}
+
+@media(max-width:680px){
+  .app-sidebar{position:fixed;top:0;bottom:0;right:0}
+  .app-sidebar.expanded{width:220px;box-shadow:0 0 40px rgba(0,0,0,0.3)}
+  .app-content{padding-right:64px}
+}
+
+/* ─── Typography ─── */
+h1{font-size:24px;font-weight:800;margin-bottom:4px;letter-spacing:-.3px}
+h2{font-size:19px;font-weight:700;margin-bottom:6px;letter-spacing:-.2px}
+h3{font-size:15px;font-weight:600}
+.sub{font-size:13px;color:var(--t2);margin-bottom:20px;line-height:1.6}
+.label-sm{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.6px}
+
+/* ─── Forms ─── */
+.fld{margin-bottom:14px}
+.fld label{display:block;font-size:11px;font-weight:700;color:var(--t2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+input,select,textarea{width:100%;padding:10px 12px;border:1.5px solid var(--brd2);border-radius:var(--rs);font-size:13px;background:var(--surf);color:var(--tx);font-family:'Heebo',sans-serif;transition:border-color .15s,box-shadow .15s;direction:rtl}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--grn);box-shadow:0 0 0 3px rgba(26,92,58,.1)}
+textarea{resize:vertical;min-height:72px;line-height:1.5}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.err-box{background:var(--rl);border:1px solid #f0b4b4;border-radius:var(--rs);padding:10px 13px;font-size:12px;color:var(--red);margin-bottom:12px;display:none}
+
+/* ─── Buttons ─── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 20px;border-radius:var(--rs);border:1.5px solid transparent;font-size:13px;font-weight:600;cursor:pointer;font-family:'Heebo',sans-serif;transition:all .15s;white-space:nowrap;letter-spacing:-.1px}
+.bp{background:var(--grn);color:#fff;border-color:var(--grn)}.bp:hover{background:var(--gd);border-color:var(--gd)}.bp:disabled{opacity:.45;cursor:not-allowed}
+.bs{background:var(--s2);color:var(--tx);border-color:var(--brd2)}.bs:hover{background:var(--s3)}
+.bg{background:transparent;color:var(--t2);border-color:transparent}.bg:hover{background:var(--s2)}
+.bsm{padding:6px 13px;font-size:12px}.bico{width:32px;height:32px;padding:0;border-radius:var(--rs)}.bfw{width:100%}
+.lbtn{padding:5px 13px;border-radius:20px;border:1.5px solid var(--brd2);background:var(--s2);font-size:12px;font-weight:600;cursor:pointer;font-family:'Heebo',sans-serif;transition:all .15s}.lbtn:hover{background:var(--brd2)}
+
+/* ─── Badges ─── */
+.bdg{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px}
+.bc{background:var(--rl);color:var(--red)}.bh{background:var(--ol);color:var(--org)}.bm{background:var(--yl);color:var(--ylw)}.bl2{background:var(--gl);color:var(--grn)}.bbd{background:var(--s3);color:var(--t2)}.bgold{background:var(--goldl);color:var(--gold);border:1px solid #e8d080}
+
+/* ─── Alert ─── */
+.alert{border-radius:var(--rs);padding:11px 14px;margin-bottom:12px;font-size:12px;line-height:1.6;font-weight:500}
+.alert-r{background:var(--rl);border:1px solid #f0b4b4;color:var(--red)}
+.alert-g{background:var(--gl);border:1px solid #a8d8b4;color:var(--gd)}
+.alert-gold{background:var(--goldl);border:1px solid #e8d080;color:var(--gold)}
+.kbox{background:#f4f0fe;border:1px solid #c8b8f8;border-radius:var(--rs);padding:9px 12px;margin-bottom:8px;font-size:12px;color:#4c35b0;font-weight:500}
+
+/* ─── Progress ─── */
+.prog{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);padding:14px 17px;margin-bottom:13px;box-shadow:var(--shadow)}
+.prog-head{display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:8px}
+.prog-head .lbl{font-weight:700}.prog-head .val{color:var(--t2)}
+.prog-t{height:7px;background:var(--s3);border-radius:7px;overflow:hidden}
+.prog-f{height:100%;background:linear-gradient(to left,var(--grn),#2ea55a);border-radius:7px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+
+/* ─── Stats ─── */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:13px}
+.stat{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);padding:12px 14px;box-shadow:var(--shadow);text-align:center}
+.stat .num{font-size:26px;font-weight:800;line-height:1;letter-spacing:-.5px}
+.stat .lbl{font-size:10px;color:var(--t2);margin-top:3px;font-weight:500}
+
+/* ─── Filter bar ─── */
+.fbar{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);padding:10px 14px;margin-bottom:12px;display:flex;gap:7px;flex-wrap:wrap;align-items:center;box-shadow:var(--shadow)}
+.fbar input{flex:1;min-width:130px;padding:7px 10px;font-size:12px}
+.pill{padding:5px 13px;border-radius:20px;border:1.5px solid var(--brd2);background:transparent;font-size:11px;font-weight:600;color:var(--t2);cursor:pointer;font-family:'Heebo',sans-serif;transition:all .15s}.pill:hover{background:var(--s2)}.pill.on{color:#fff!important;border-color:transparent}
+.p-all.on{background:var(--grn)}.p-critical.on{background:var(--red)}.p-high.on{background:var(--org)}.p-medium.on{background:var(--ylw)}.p-low.on{background:var(--grn)}.p-done.on{background:#888}
+
+/* ─── Product rows ─── */
+.prod-list{display:flex;flex-direction:column;gap:5px}
+.prod-row{background:var(--surf);border-bottom:1px solid var(--brd);overflow:hidden;transition:background .15s;margin:0}
+.prod-row:last-child{border-bottom:none}
+.prod-row:hover{background:var(--s2)}
+.prod-row.pri-row{border-color:#c8a820}
+.prod-row.done-row{opacity:.6}
+.rhead{display:flex;align-items:center;gap:10px;padding:12px 15px;cursor:pointer;user-select:none;transition:background .1s}
+.rhead:hover{background:var(--s2)}
+.prod-row.open .rhead{background:var(--s2);border-bottom:1.5px solid var(--brd)}
+.rico{font-size:22px;flex-shrink:0;width:38px;text-align:center;display:flex;align-items:center;justify-content:center}
+.prod-img{width:36px;height:36px;object-fit:cover;border-radius:6px;border:1px solid var(--brd2);display:block;margin:0 auto}
+.rname{font-size:13px;font-weight:600;flex:1;text-align:right;letter-spacing:-.1px}
+.rname.struck{text-decoration:line-through;color:var(--t3)}
+.rbdgs{display:flex;gap:5px;align-items:center;flex-shrink:0}
+.rprice{font-size:13px;color:var(--grn);font-weight:700;margin:0 8px;flex-shrink:0;cursor:help;transition:transform .1s}.rprice:hover{transform:scale(1.05);text-decoration:underline}
+.rchev{font-size:12px;color:var(--t3);flex-shrink:0;transition:transform .2s;margin-right:4px}
+.prod-row.open .rchev{transform:rotate(180deg)}
+.racts{display:flex;gap:3px;flex-shrink:0}
+.rbody{padding:16px;display:none}.prod-row.open .rbody{display:block}
+
+/* ─── Body grid ─── */
+.bgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:680px){.bgrid{grid-template-columns:1fr}}
+.bsec{margin-bottom:12px}
+.stitle{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px;display:block}
+
+/* ─── Price entries ─── */
+.price-entry{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1.5px solid var(--brd);border-radius:var(--rs);margin-bottom:5px;background:var(--s2);transition:border-color .15s}
+.price-entry:hover{border-color:var(--brd2)}
+.pe-store{font-size:12px;font-weight:600;flex:1;text-align:right}
+.pe-note{font-size:10px;color:var(--t2)}
+.pe-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.pe-price{font-size:15px;font-weight:800;color:var(--grn)}
+.pe-best{font-size:9px;background:var(--gl);color:var(--grn);padding:2px 6px;border-radius:8px;font-weight:700}
+.pe-link{font-size:11px;color:#1a5fa6;text-decoration:none;font-weight:500}.pe-link:hover{text-decoration:underline}
+.pe-del{background:transparent;border:none;color:var(--t3);cursor:pointer;font-size:16px;padding:0 2px;line-height:1}.pe-del:hover{color:var(--red)}
+
+/* ─── URL box ─── */
+.url-box{background:var(--gl);border:1.5px solid #a8d8b4;border-radius:var(--r);padding:13px 15px;margin-bottom:11px}
+.url-title{font-size:11px;font-weight:700;color:var(--gd);margin-bottom:8px;display:block}
+.url-row{display:flex;gap:8px}
+.url-row input{flex:1;border-color:#a8d8b4;font-size:12px}
+.url-status{font-size:11px;color:var(--t2);margin-top:6px;min-height:16px}
+
+/* ─── Model Picker Accordion ─── */
+.acc-box{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow)}
+.acc-hdr{padding:14px 18px;font-weight:700;font-size:14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--s2);transition:background .15s}
+.acc-hdr:hover{background:var(--s3)}
+.acc-hdr::after{content:'▼';font-size:11px;color:var(--t2);transition:transform .2s}
+.acc-box.open .acc-hdr::after{transform:rotate(180deg)}
+.acc-box.open .acc-hdr{border-bottom:1px solid var(--brd)}
+.acc-bdy{display:none;background:var(--surf)}
+.acc-box.open .acc-bdy{display:block}
+.acc-row{padding:16px 18px;border-bottom:1px solid var(--brd);display:flex;gap:14px;align-items:center;transition:background .15s}
+.acc-row:last-child{border-bottom:none}
+.acc-row:hover{background:var(--gl)}
+.acc-row.sel{background:#e8f4ee;border-right:4px solid var(--grn)}
+.ar-img-wrap{width:64px;height:64px;border-radius:8px;border:1px solid var(--brd2);background:var(--s2);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:24px}
+.ar-img{width:100%;height:100%;object-fit:cover}
+.ar-info{flex:1}
+.ar-name{font-size:14px;font-weight:700;margin-bottom:4px}
+.ar-price{font-size:13px;color:var(--grn);font-weight:700;margin-bottom:6px}
+.ar-note{font-size:11px;color:var(--t2);line-height:1.4}
+.ar-act{flex-shrink:0}
+
+/* ─── Row footer ─── */
+.rfoot{display:flex;align-items:center;gap:10px;padding-top:10px;border-top:1px solid var(--brd);margin-top:11px}
+.chk-lbl{display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;font-weight:600}
+.chk-lbl input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--grn)}
+
+/* ─── Tabs ─── */
+.tabs{display:flex;gap:4px;background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);padding:4px;margin-bottom:13px;box-shadow:var(--shadow)}
+.tab{flex:1;padding:8px;border:none;border-radius:var(--rs);cursor:pointer;font-size:12px;font-weight:600;background:transparent;color:var(--t2);transition:all .15s;font-family:'Heebo',sans-serif}.tab.on{background:var(--grn);color:#fff;box-shadow:0 2px 6px rgba(26,92,58,.25)}
+.mtabs{display:flex;gap:3px;background:var(--s2);padding:3px;border-radius:var(--rs);margin-bottom:15px}
+.mtab{flex:1;padding:8px;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;background:transparent;color:var(--t2);transition:all .15s;font-family:'Heebo',sans-serif}.mtab.on{background:var(--surf);color:var(--tx);box-shadow:var(--shadow)}
+
+/* ─── Steps bar ─── */
+.steps{display:flex;align-items:center;margin-bottom:28px}
+.si{display:flex;align-items:center;gap:7px;flex:1}
+.sc{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;transition:all .2s}
+.sc-done{background:var(--grn);color:#fff;box-shadow:0 2px 6px rgba(26,92,58,.3)}
+.sc-active{background:var(--grn);color:#fff;box-shadow:0 0 0 4px rgba(26,92,58,.15)}
+.sc-pending{background:var(--s3);color:var(--t3);border:1.5px solid var(--brd)}
+.sl{font-size:11px;font-weight:600;color:var(--t2)}
+.sln{flex:1;height:2px;background:var(--brd);margin:0 5px}.sln.dn{background:var(--grn)}
+
+/* ─── Admin table ─── */
+.admin-table{width:100%;border-collapse:collapse;font-size:12px}
+.admin-table th{background:var(--s2);padding:9px 11px;text-align:right;font-weight:700;border-bottom:2px solid var(--brd);color:var(--t2);text-transform:uppercase;font-size:10px;letter-spacing:.4px}
+.admin-table td{padding:8px 11px;border-bottom:1px solid var(--brd);vertical-align:middle}
+.admin-table tr:hover td{background:var(--s2)}
+
+/* ─── Modal ─── */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)}
+.mbox{background:var(--surf);border-radius:var(--rl2);padding:26px;max-width:520px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.2);max-height:88vh;overflow-y:auto}
+.mhdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.mtitle{font-size:16px;font-weight:700;letter-spacing:-.2px}
+.mclose{background:transparent;border:none;font-size:20px;cursor:pointer;color:var(--t2);width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;line-height:1}.mclose:hover{background:var(--s2)}
+
+/* ─── Misc ─── */
+.spin{width:24px;height:24px;border:3px solid var(--brd);border-top-color:var(--grn);border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:50px;color:var(--t2)}.ei{font-size:40px;margin-bottom:12px}
+.toast{position:fixed;bottom:22px;left:22px;background:#1c1a17;color:#fff;padding:11px 18px;border-radius:var(--r);font-size:13px;font-weight:500;z-index:2000;box-shadow:0 8px 24px rgba(0,0,0,.2);animation:fi .2s ease}
+@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.sep{height:1px;background:var(--brd);margin:14px 0}
+@media(max-width:600px){.stats{grid-template-columns:repeat(3,1fr)}.r2{grid-template-columns:1fr}.main{padding:12px}.topbar{padding:0 14px}.card{padding:20px}.model-grid{grid-template-columns:1fr 1fr}}
+/* ─── Category Accordion ─── */
+.cat-accordion{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow)}
+.cat-header{padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;background:var(--s2);border-bottom:1px solid var(--brd);transition:background .15s}
+.cat-header:hover{background:var(--s3)}
+.cat-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+.cat-count{font-size:12px;font-weight:500;color:var(--t2)}
+.cat-chev{font-size:11px;color:var(--t2);transition:transform .2s}
+.cat-accordion.open .cat-chev{transform:rotate(180deg)}
+.cat-body{max-height:0;overflow:hidden;transition:max-height .3s ease}
+.cat-accordion.open .cat-body{max-height:5000px}
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div id="modal-root"></div>
+<div id="toast-root"></div>
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════════
+   SUPABASE
+═══════════════════════════════════════════════ */
+const SUPABASE_URL  = 'https://mbyrgbtdpefncusxqzoc.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ieXJnYnRkcGVmbmN1c3hxem9jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MDMyOTIsImV4cCI6MjA5MDM3OTI5Mn0.CKyhfWlCMaNycwqYDM8XYv_4u2pQSUr3ez4hOIc84Xg';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+/* ═══════════════════════════════════════════════
+   קבועים
+═══════════════════════════════════════════════ */
+const PRI = ['stroller','car-seat','crib'];
+const PRI_NAMES = {stroller:'עגלת תינוק',  'car-seat':'כיסא בטיחות',  crib:'מיטה / עריסה'};
+const PRI_ICONS = {stroller:'👶', 'car-seat':'🚗', crib:'🛏️'};
+
+const CATS = [
+  {id:'stroller',  he:'עגלת תינוק',       icon:'👶', u:'critical'},
+  {id:'car-seat',  he:'כיסא בטיחות',      icon:'🚗', u:'critical'},
+  {id:'crib',      he:'מיטה / עריסה',     icon:'🛏️', u:'critical'},
+  {id:'changing',  he:'שידה מתחלפת',      icon:'🧷', u:'critical'},
+  {id:'diapers',   he:'חיתולים ומגבונים', icon:'🧸', u:'critical'},
+  {id:'clothes',   he:'בגדי תינוק',       icon:'👕', u:'critical'},
+  {id:'bottles',   he:'בקבוקי הזנה',      icon:'🍼', u:'critical'},
+  {id:'hospital',  he:'תיק חדר לידה',     icon:'👜', u:'critical'},
+  {id:'bathtub',   he:'אמבטיה לתינוק',    icon:'🛁', u:'high'},
+  {id:'monitor',   he:'מוניטור תינוק',    icon:'📷', u:'high'},
+  {id:'pump',      he:'משאבת חלב',        icon:'🤱', u:'high'},
+  {id:'carrier',   he:'מנשא תינוק',       icon:'🫂', u:'high'},
+  {id:'nursing',   he:'כרית הנקה',        icon:'🛋️', u:'high'},
+  {id:'health',    he:'ערכת בריאות',      icon:'🏥', u:'high'},
+  {id:'towels',    he:'מגבות רחצה',       icon:'🏊', u:'high'},
+  {id:'swaddles',  he:'שמיכות עטיפה',     icon:'🌯', u:'high'},
+  {id:'bassinet',  he:'סל תינוק נייד',    icon:'🌙', u:'medium'},
+  {id:'bag',       he:'תיק לעגלה',        icon:'👝', u:'medium'},
+  {id:'pacifier',  he:'מוצץ',             icon:'😶', u:'medium'},
+  {id:'nightlight',he:'מנורת לילה',       icon:'🌕', u:'medium'},
+  {id:'diaperpail',he:'שפיכולית',         icon:'🗑️', u:'medium'},
+  {id:'playmat',   he:'שטיח פעילות',      icon:'🎯', u:'low'},
+  {id:'swing',     he:'נדנדה / בוינסר',   icon:'🎠', u:'low'},
+  {id:'whitenoise',he:'מכונת רעש לבן',    icon:'🔊', u:'low'},
+  {id:'highchair', he:'כיסא אוכל גבוה',   icon:'🪑', u:'low'},
+];
+
+const UHE = {critical:'🔴 קריטי', high:'🟠 דחוף', medium:'🟡 בינוני', low:'🟢 יכול לחכות'};
+const UCLS = {critical:'bc', high:'bh', medium:'bm', low:'bl2'};
+const UO   = {critical:0, high:1, medium:2, low:3};
+
+const STORES = {
+  shilav: { 
+    name: 'שילב', 
+    url: 'https://www.shilav.co.il', 
+    logo: 'https://www.shilav.co.il/cdn/shop/files/SHILAV-1.png?v=1724591056' 
+  },
+  motzetzim: { 
+    name: 'מוצצים', 
+    url: 'https://motsesim.co.il', 
+    logo: 'https://motsesim.co.il/cdn/shop/files/3265138a040434fd4d2866b4acacf4e0.webp?v=1768919819&width=400' 
+  },
+  babystar: { 
+    name: 'בייבי סטאר', 
+    url: 'https://www.baby-star.co.il', 
+    logo: 'https://www.baby-star.co.il/cdn/shop/files/site-logo-01.png?v=1728044100' 
+  },
+  aglis: { 
+    name: 'עגליס', 
+    url: 'https://agalease-baby.co.il', 
+    logo: 'https://agalease-baby.co.il/wp-content/uploads/2020/09/Agalease-Logo-Outline-Horizontal-e1600329730819.png' 
+  },
+  moradbaby: { 
+    name: 'מוראד בייבי', 
+    url: 'https://www.moradbaby.co.il', 
+    logo: 'https://d3m9l0v76dty0.cloudfront.net/system/logos/5404/original/09383995f81fd38cb98536172f5225df.png' 
+  },
+  babylino: { 
+    name: 'בייבילינו', 
+    url: 'https://www.babylino.co.il', 
+    logo: 'https://d3m9l0v76dty0.cloudfront.net/system/logos/5400/original/02cd7229da8a263b445fcc9b8e306bef.png' 
+  },
+  kochavnolad: { 
+    name: 'כוכב נולד', 
+    url: 'https://www.kochavnolad.co.il', 
+    logo: 'https://d3m9l0v76dty0.cloudfront.net/system/logos/4413/original/dae5a1b42056b254ffe6b06861c6ceb8.png' 
+  },
+  'bugaboo-distributor': { 
+    name: 'בוגבו ישראל', 
+    url: 'https://www.bugaboo-distributor.co.il', 
+    logo: 'https://www.bugaboo-distributor.co.il/wp-content/uploads/2019/10/logo.svg' 
+  },
+  amazon: { 
+    name: 'Amazon', 
+    url: 'https://www.amazon.com', 
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg' 
+  },
+  aliexpress: { 
+    name: 'AliExpress', 
+    url: 'https://www.aliexpress.com', 
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/3/3b/Aliexpress_logo.svg' 
+  }
+};
+
+/* ═══════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════ */
+let S = {
+  user:null, profile:null, isAdmin:false,
+  items:[], models:[],
+  dashTab:'products', filterU:'all', filterQ:'',
+  authMode:'login',
+  obStep:0, obSel:{},
+  openItemId: null,
+  openCats: [],
+  sidebarExpanded: false,
+};
+
+function getCat(id){ return CATS.find(c=>c.id===id)||{}; }
+
+/* ═══════════════════════════════════════════════
+   DOM HELPERS
+═══════════════════════════════════════════════ */
+function $(id){ return document.getElementById(id); }
+function mk(tag,cls){ const e=document.createElement(tag); if(cls) e.className=cls; return e; }
+function tx(s){ return document.createTextNode(String(s==null?'':s)); }
+function mkBtn(label,cls,fn){ const b=mk('button','btn '+cls); b.textContent=label; b.onclick=fn; return b; }
+function mkInp(type,ph,val){ const i=mk('input'); i.type=type; i.placeholder=ph||''; if(val!=null) i.value=val; return i; }
+function mkSel(opts,sel){ const s=mk('select'); opts.forEach(([v,l])=>{ const o=mk('option'); o.value=v; o.textContent=l; if(v===sel) o.selected=true; s.append(o); }); return s; }
+function mkFld(label,children){ const d=mk('div','fld'); const l=mk('label'); l.textContent=label; d.append(l,...children); return d; }
+
+function urgBadge(u){
+  const e=mk('span','bdg '+(UCLS[u]||'bbd')); e.textContent=UHE[u]||u; return e;
+}
+
+function toast(msg, err=false){
+  const e=mk('div','toast'); e.textContent=msg;
+  if(err) e.style.background='var(--red)';
+  $('toast-root').append(e); setTimeout(()=>e.remove(),2800);
+}
+
+/* ═══════════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════════ */
+function openModal(title, content){
+  closeModal();
+  const ov=mk('div','ov'); ov.id='modal-ov';
+  ov.onclick=e=>{ if(e.target===ov) closeModal(); };
+  const box=mk('div','mbox');
+  const hdr=mk('div','mhdr');
+  const ttl=mk('div','mtitle'); ttl.textContent=title;
+  const cls=mk('button','mclose'); cls.textContent='✕'; cls.onclick=closeModal;
+  hdr.append(cls,ttl);
+  box.append(hdr,content); ov.append(box);
+  $('modal-root').append(ov);
+}
+function closeModal(){ const o=$('modal-ov'); if(o) o.remove(); }
+
+/* ═══════════════════════════════════════════════
+   חישוב תאריך לידה
+═══════════════════════════════════════════════ */
+function calcDue(w,x=0){
+  const d=new Date(); d.setDate(d.getDate()+(40-w)*7-x);
+  return d.toISOString().split('T')[0];
+}
+
+function mkWeekPicker(initW, initD){
+  const wrap=mk('div');
+  const row=mk('div','r2');
+  const wi=mkInp('number','למשל 18',initW||''); wi.min=1; wi.max=42;
+  const di=mkInp('number','0',initD||0); di.min=0; di.max=6;
+  row.append(mkFld('שבוע הריון',[wi]),mkFld('ימים נוספים (0-6)',[di]));
+  wrap.append(row);
+  const prev=mk('div','alert alert-g'); prev.style.display='none';
+  const note=mk('div'); note.style.cssText='font-size:11px;color:var(--t2);margin-top:6px';
+  note.textContent='מחושב אוטומטית — ניתן לשינוי בהגדרות.';
+  wrap.append(prev,note);
+  function upd(){
+    const w=Number(wi.value), x=Number(di.value||0);
+    if(w>=1&&w<=42){
+      const d=new Date(); d.setDate(d.getDate()+(40-w)*7-x);
+      const ds=d.toLocaleDateString('he-IL',{day:'numeric',month:'long',year:'numeric'});
+      const dl=Math.round((d-new Date())/86400000);
+      const wl=Math.floor(Math.max(0,dl)/7), dl2=Math.max(0,dl)%7;
+      prev.textContent='תאריך לידה משוער: '+ds+(dl>0?' (עוד '+wl+' שבועות ו-'+dl2+' ימים)':'');
+      prev.style.display='block';
+    } else prev.style.display='none';
+  }
+  wi.addEventListener('input',upd); di.addEventListener('input',upd);
+  if(initW) upd();
+  return { node:wrap, getW:()=>Number(wi.value), getD:()=>Number(di.value||0) };
+}
+
+/* ═══════════════════════════════════════════════
+   כניסה / הרשמה
+═══════════════════════════════════════════════ */
+function renderAuth(){
+  const root=$('root'); root.innerHTML='';
+  const pg=mk('div','center');
+  const card=mk('div','card csm');
+
+  // כותרת
+  const hdr=mk('div'); hdr.style.cssText='text-align:center;margin-bottom:22px';
+  const ico=mk('div'); ico.style.cssText='font-size:44px;margin-bottom:8px'; ico.textContent='🍼';
+  const title=mk('h1'); title.textContent='BabyReady';
+  const sub=mk('div','sub'); sub.textContent='מתכנן רשימת ציוד חכם לתינוק';
+  hdr.append(ico,title,sub); card.append(hdr);
+
+  const mt=mk('div','mtabs');
+  [['login','כניסה'],['register','הרשמה']].forEach(([v,l])=>{
+    const b=mk('button','mtab'+(S.authMode===v?' on':'')); b.textContent=l;
+    b.onclick=()=>{ S.authMode=v; renderAuth(); }; mt.append(b);
+  });
+  card.append(mt);
+
+  const errBox=mk('div','err-box'); errBox.id='auth-err';
+  const showErr=msg=>{ errBox.textContent=msg; errBox.style.display='block'; };
+
+  const em=mkInp('email','your@email.com'); card.append(mkFld('אימייל',[em]));
+  const pi=mkInp('password','••••••••'); card.append(mkFld('סיסמה',[pi]));
+
+  if(S.authMode==='register'){
+    const ui=mkInp('text','שם_משתמש');
+    card.insertBefore(mkFld('שם משתמש',[ui]), card.querySelectorAll('.fld')[0]);
+    const pi2=mkInp('password','••••••••'); card.append(mkFld('אימות סיסמה',[pi2]));
+
+    const pb=mk('div'); pb.style.cssText='background:var(--s2);border:1px solid var(--brd);border-radius:var(--r);padding:14px;margin-bottom:14px';
+    const ptitle=mk('div'); ptitle.style.cssText='font-size:13px;font-weight:700;margin-bottom:10px'; ptitle.textContent='🤰 שלב ההריון';
+    const wp=mkWeekPicker(18,0); pb.append(ptitle,wp.node);
+    card.append(pb,errBox);
+
+    const sb2=mkBtn('יצירת חשבון ←','bp bfw',async()=>{
+      const u=ui?.value.trim(), e=em.value.trim(), p=pi.value, p2=pi2.value, w=wp.getW(), x=wp.getD();
+      if(!u)        { showErr('שם משתמש נדרש'); return; }
+      if(!e.includes('@')){ showErr('אימייל לא תקין'); return; }
+      if(p.length<6){ showErr('סיסמה — לפחות 6 תווים'); return; }
+      if(p!==p2)    { showErr('הסיסמאות אינן תואמות'); return; }
+      if(!w||w<1||w>42){ showErr('הכנס שבוע הריון (1-42)'); return; }
+      sb2.disabled=true; sb2.textContent='…';
+      const {data:auth,error:ae}=await sb.auth.signUp({email:e,password:p});
+      if(ae){ showErr(ae.message); sb2.disabled=false; sb2.textContent='יצירת חשבון ←'; return; }
+      
+      await sb.auth.updateUser({data: { username: u, preg_week: w, preg_days: x, due_date: calcDue(w,x) }});
+      await sb.from('profiles').update({due_date:calcDue(w,x),preg_week:w,preg_days:x}).eq('id',auth.user.id);
+      
+      S.user=auth.user;
+      S.profile={id:auth.user.id,username:u,lang:'he',country:'Israel',due_date:calcDue(w,x),preg_week:w,preg_days:x,is_admin:false};
+      await afterLogin();
+    });
+    sb2.style.marginTop='4px'; card.append(sb2);
+  } else {
+    card.append(errBox);
+    const sb2=mkBtn('כניסה ←','bp bfw',async()=>{
+      const e=em.value.trim(), p=pi.value;
+      if(!e||!p){ showErr('נדרשים אימייל וסיסמה'); return; }
+      sb2.disabled=true; sb2.textContent='…';
+      const {data:auth,error}=await sb.auth.signInWithPassword({email:e,password:p});
+      if(error){ showErr(error.message); sb2.disabled=false; sb2.textContent='כניסה ←'; return; }
+      const {data:profile}=await sb.from('profiles').select('*').eq('id',auth.user.id).single();
+      S.user=auth.user; S.profile=profile;
+      await afterLogin();
+    });
+    sb2.style.marginTop='4px'; card.append(sb2);
+  }
+  pg.append(card); root.append(pg);
+}
+
+/* ═══════════════════════════════════════════════
+   אחרי כניסה
+═══════════════════════════════════════════════ */
+async function afterLogin(){
+  S.isAdmin = (S.profile?.is_admin === true || S.user?.email === 'benmussayov@gmail.com');
+
+  // Load stores from DB to get dynamic logos/names
+  const { data: dbStores } = await sb.from('stores').select('*');
+  if (dbStores) {
+    dbStores.forEach(s => {
+      let logo = s.logo_url;
+      if(!logo && s.url){
+        try {
+          const urlObj = new URL(s.url);
+          logo = `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=128`;
+        } catch(e){}
+      }
+      STORES[s.id] = {
+        name: s.name_he || s.name_en,
+        url: s.url,
+        logo: logo
+      };
+    });
+  }
+
+  const {data:models}=await sb.from('product_models')
+    .select('*, brands(name)')
+    .eq('active',true)
+    .order('is_karin_pick',{ascending:false});
+  S.models=models||[];
+  await loadItems();
+
+  if(S.items && S.items.length > 0){
+    renderDash();
+  } else {
+    S.obStep=0; S.obSel={}; renderOnboard();
+  }
+}
+
+async function loadItems(){
+  const {data}=await sb.from('user_items')
+    .select('*, product_models(*, brands(name))')
+    .eq('user_id',S.user.id);
+  S.items=(data||[]).map(i=>({...i, _cat:getCat(i.category_id), product_prices:[]}));
+  
+  // טען מחירים לכל דגם
+  for(let item of S.items){
+    if(item.model_id){
+      const {data:prices}=await sb.from('product_prices')
+        .select('*')
+        .eq('model_id',item.model_id);
+      item.product_prices=prices||[];
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   אונבורדינג — 3 מסכי בחירה באקורדיון מותגים
+═══════════════════════════════════════════════ */
+function renderOnboard(){
+  const root=$('root'); root.innerHTML='';
+  const pg=mk('div'); pg.style.cssText='min-height:100vh;padding:24px 16px;background:var(--bg)';
+  const wrap=mk('div'); wrap.style.cssText='max-width:700px;margin:0 auto';
+
+  const bar=mk('div','steps');
+  ['בחרו עגלה','בחרו כיסא בטיחות','בחרו מיטה','לוח הבקרה'].forEach((lbl,i)=>{
+    const si=mk('div','si');
+    const sc=mk('div','sc '+(i<S.obStep?'sc-done':i===S.obStep?'sc-active':'sc-pending'));
+    sc.textContent=i<S.obStep?'✓':String(i+1);
+    const sl=mk('div','sl'); sl.textContent=lbl;
+    si.append(sc,sl); bar.append(si);
+    if(i<3){ const ln=mk('div','sln'+(i<S.obStep?' dn':'')); bar.append(ln); }
+  });
+  wrap.append(bar);
+
+  if(S.obStep<3){
+    buildAccordionPicker(wrap);
+  } else {
+    finishOnboard(wrap);
+  }
+  pg.append(wrap); root.append(pg);
+}
+
+function buildAccordionPicker(wrap){
+  const catId=PRI[S.obStep];
+  const models=S.models.filter(m=>m.category_id===catId);
+
+  const h2=mk('h2'); h2.textContent='בחרו את ה'+PRI_NAMES[catId]+' שלכם '+PRI_ICONS[catId];
+  const sub=mk('div','sub'); sub.textContent='לחצו על המותגים כדי לראות את הדגמים. לאחר הבחירה, נוכל להוסיף מחירים מהרשתות השונות.';
+  wrap.append(h2,sub);
+
+  const tip=mk('div','alert alert-gold');
+  tip.textContent='💡 כרטיסי הנחה (חבר, ביחד בשבילך, בהצדעה) מעניקים 15–30% הנחה ברשתות!';
+  wrap.append(tip);
+
+  const gridWrap=mk('div'); wrap.append(gridWrap);
+
+  function draw(){
+    gridWrap.innerHTML='';
+    if(!models.length){
+      const e=mk('div','sub'); e.style.padding='20px 0'; e.textContent='אין דגמים זמינים כרגע.'; gridWrap.append(e); return;
+    }
+
+    const brands=[...new Set(models.map(m=>m.brands?.name||'אחר'))];
+    brands.forEach(brand=>{
+      const box = mk('div', 'acc-box');
+      const hdr = mk('div', 'acc-hdr'); hdr.textContent = brand;
+      const bdy = mk('div', 'acc-bdy');
+      
+      hdr.onclick = () => { box.classList.toggle('open'); };
+      
+      models.filter(m=>(m.brands?.name||'אחר')===brand).forEach(m=>{
+        const isSel = S.obSel[catId] === m.id;
+        const row = mk('div', 'acc-row' + (isSel ? ' sel' : ''));
+        if(isSel) box.classList.add('open');
+        
+        const imgWrap = mk('div', 'ar-img-wrap');
+        if(m.image_url) {
+            const img = mk('img', 'ar-img');
+            img.src = m.image_url;
+            imgWrap.append(img);
+        } else {
+            imgWrap.textContent = PRI_ICONS[catId];
+        }
+        row.append(imgWrap);
+
+        const info = mk('div', 'ar-info');
+        const nm = mk('div', 'ar-name'); nm.textContent = m.model_name;
+        info.append(nm);
+        
+        if(m.is_karin_pick){
+          const kb=mk('span','mc-karin'); kb.textContent='⭐ המלצת קרין'; info.append(kb);
+        }
+
+        const pr = mk('div', 'ar-price');
+        if(m.price_range_low) pr.textContent = '₪'+m.price_range_low.toLocaleString()+' – ₪'+(m.price_range_high||0).toLocaleString() + ' (משוער)';
+        else pr.textContent = 'מחיר לא ידוע';
+        info.append(pr);
+
+        if(m.description || m.karin_note){
+          const nt = mk('div', 'ar-note');
+          nt.textContent = m.karin_note ? 'הערת קרין: ' + m.karin_note : m.description;
+          info.append(nt);
+        }
+
+        const act = mk('div', 'ar-act');
+        const btn = mkBtn(isSel ? 'נבחר ✓' : 'בחירה', isSel ? 'bp bsm' : 'bs bsm', () => {
+           S.obSel[catId]=m.id; draw();
+        });
+        if(isSel) btn.style.background='var(--gd)';
+        
+        act.append(btn);
+        row.append(info, act);
+        bdy.append(row);
+      });
+
+      box.append(hdr, bdy);
+      gridWrap.append(box);
+    });
+
+    const skipDiv = mk('div'); skipDiv.style.textAlign='center'; skipDiv.style.marginTop='20px';
+    skipDiv.append(mkBtn('דלג — לא רוצה לבחור כרגע','bg bsm', ()=>{ S.obSel[catId]=null; S.obStep++; renderOnboard(); }));
+    gridWrap.append(skipDiv);
+  }
+  draw();
+
+  const foot=mk('div'); foot.style.cssText='display:flex;justify-content:space-between;padding-top:18px;border-top:1px solid var(--brd);margin-top:16px';
+  if(S.obStep>0) foot.append(mkBtn('→ חזרה','bs',()=>{ S.obStep--; renderOnboard(); }));
+  else foot.append(mk('div'));
+  const nextLbl=S.obStep<2?'המשך ←':'לסיום — לוח הבקרה ←';
+  foot.append(mkBtn(nextLbl,'bp',()=>{ S.obStep++; renderOnboard(); }));
+  wrap.append(foot);
+}
+
+// שוכתב לחלוטין כדי למנוע קריסות של Upsert!
+async function finishOnboard(wrap){
+  const saving=mk('div','sub'); saving.style.padding='30px 0'; saving.textContent='שומר בחירות…';
+  wrap.append(saving);
+  
+  // נבדוק קודם מה כבר יש למשתמש כדי לא לדרוס או לייצר התנגשויות
+  const { data: existing } = await sb.from('user_items').select('*').eq('user_id', S.user.id);
+  const existingMap = {};
+  (existing || []).forEach(x => { existingMap[x.category_id] = x; });
+  
+  const toInsert = [];
+  
+  // עבור כל קטגוריה עדיפות (3 בחירות הראשיות)
+  PRI.forEach(catId => {
+    const chosenModel = S.obSel[catId] || null;
+    
+    if (existingMap[catId]) {
+        // קטגוריה זו כבר קיימת — עדכן את ה-model_id
+        sb.from('user_items').update({ model_id: chosenModel }).eq('id', existingMap[catId].id).then(({error})=>{
+          if(error) console.error('Update error:', error);
+        });
+    } else {
+        // קטגוריה זו לא קיימת — הוסף
+        toInsert.push({ user_id: S.user.id, category_id: catId, model_id: chosenModel });
+    }
+  });
+
+  if (toInsert.length > 0) {
+      const {error} = await sb.from('user_items').insert(toInsert);
+      if(error) console.error('Insert error:', error);
+  }
+  
+  await loadItems();
+  renderDash();
+}
+
+/* ═══════════════════════════════════════════════
+   לוח הבקרה
+═══════════════════════════════════════════════ */
+function renderDash(){
+  const root=$('root'); root.innerHTML='';
+
+  const appContainer=mk('div','app-container');
+  
+  // ─── Sidebar ───
+  const sbNode=mk('div','app-sidebar');
+  if(S.sidebarExpanded) sbNode.classList.add('expanded');
+
+  // Sidebar Header
+  const sbTop=mk('div','sb-top');
+  const sbToggle=mk('i'); sbToggle.textContent='🍼';
+  sbToggle.onclick=()=>{
+    S.sidebarExpanded = !S.sidebarExpanded;
+    if(S.sidebarExpanded) sbNode.classList.add('expanded');
+    else sbNode.classList.remove('expanded');
+  };
+  const sbTxt=mk('span','sb-top-text'); sbTxt.textContent='BabyReady';
+  sbTop.append(sbToggle,sbTxt);
+  sbNode.append(sbTop);
+
+  // Sidebar Menu
+  const sbMenu=mk('div','sb-menu');
+  const sitems=[
+    {v:'products', l:'מוצרים', ico:'📋'},
+    {v:'gantt',    l:'ציר זמן', ico:'📅'},
+    {v:'delivery', l:'משלוחים', ico:'🚚'}
+  ];
+  
+  sitems.forEach(itm=>{
+    const itemEl=mk('div','sb-item'+(S.dashTab===itm.v?' on':''));
+    const iEl=mk('i'); iEl.textContent=itm.ico;
+    const txtEl=mk('span','sb-item-text'); txtEl.textContent=itm.l;
+    itemEl.append(iEl,txtEl);
+    itemEl.onclick=()=>{ 
+      S.dashTab=itm.v; 
+      S.sidebarExpanded=false; sbNode.classList.remove('expanded');
+      renderDash(); // Re-render to update 'on' class and main view
+    };
+    sbMenu.append(itemEl);
+  });
+  sbNode.append(sbMenu);
+
+  // Sidebar Footer
+  const sbFoot=mk('div','sb-foot');
+  
+  if(S.isAdmin) {
+    const btnAdmin=mk('div','sb-item'+(S.dashTab==='admin'?' on':''));
+    const iAdmin=mk('i'); iAdmin.textContent='🛡️';
+    const tAdmin=mk('span','sb-item-text'); tAdmin.textContent='ניהול';
+    btnAdmin.append(iAdmin,tAdmin);
+    btnAdmin.onclick=()=> { 
+      S.dashTab='admin'; 
+      S.sidebarExpanded=false; sbNode.classList.remove('expanded');
+      renderDash(); 
+    };
+    sbFoot.append(btnAdmin);
+  }
+
+  const btnSettings=mk('div','sb-item');
+  const iSettings=mk('i'); iSettings.textContent='⚙️';
+  const tSettings=mk('span','sb-item-text'); tSettings.textContent='הגדרות';
+  btnSettings.append(iSettings,tSettings);
+  btnSettings.onclick=openSettings;
+
+  const btnLogout=mk('div','sb-item');
+  const iLogout=mk('i'); iLogout.textContent='🚪';
+  const tLogout=mk('span','sb-item-text'); tLogout.textContent='יציאה';
+  btnLogout.append(iLogout,tLogout);
+  btnLogout.onclick=async()=>{ await sb.auth.signOut(); S.user=null; S.profile=null; S.items=[]; renderAuth(); };
+  
+  sbFoot.append(btnSettings,btnLogout);
+  sbNode.append(sbFoot);
+
+  // ─── App Content ───
+  const appContent=mk('div','app-content');
+  
+  const tb=mk('div','topbar');
+  
+  const fullName=S.profile?.username || S.user?.email?.split('@')[0] || '';
+  let firstName=fullName.trim().split(/[\s._]+/)[0];
+  if(firstName.toLowerCase().startsWith('benmus')) firstName='בן';
+  
+  const tblft=mk('div','tbl');
+  tblft.textContent='היי ' + firstName + ' 👋';
+
+  const tbr=mk('div','tbr');
+  const dl=S.profile?.due_date?Math.round((new Date(S.profile.due_date)-new Date())/86400000):null;
+  if(dl!==null){
+    const ds=mk('span'); ds.style.cssText='font-size:12px;color:var(--t2);font-weight:500';
+    ds.textContent=dl>0?'🗓️ '+dl+' ימים':dl===0?'🎉 היום!':'🎉 מזל טוב!';
+    tbr.append(ds);
+  }
+  tb.append(tblft, tbr);
+  
+  const main=mk('div','main'); main.id='dash-main'; 
+  appContent.append(tb,main);
+
+  appContainer.append(sbNode,appContent);
+  root.append(appContainer);
+
+  renderMain();
+}
+
+function renderMain(){
+  const main=$('dash-main'); if(!main) return;
+  main.innerHTML='';
+
+  if(S.dashTab==='products') main.append(buildProductsTab());
+  else if(S.dashTab==='gantt') main.append(buildGantt());
+  else if(S.dashTab==='delivery') main.append(buildDelivery());
+  else if(S.dashTab==='admin'&&S.isAdmin) main.append(buildAdmin());
+}
+
+/* ═══════════════════════════════════════════════
+   לשונית מוצרים
+═══════════════════════════════════════════════ */
+function buildProductsTab(){
+  const frag=document.createDocumentFragment();
+  const fb=mk('div','fbar');
+  const si=mkInp('text','חיפוש…',S.filterQ);
+  si.oninput=e=>{ S.filterQ=e.target.value; refreshList(); };
+  fb.append(mkBtn('+ הוספת פריט','bp bsm',openAddItemModal));
+  [['all','הכל'],['critical','🔴 קריטי'],['high','🟠 דחוף'],['medium','🟡 בינוני'],['low','🟢 יכול לחכות'],['done','✓ נקנה']].forEach(([v,l])=>{
+    const p=mk('button','pill p-'+v+(S.filterU===v?' on':'')); p.textContent=l;
+    p.onclick=()=>{ S.filterU=v; refreshList(); }; fb.append(p);
+  });
+  fb.append(si); frag.append(fb);
+  const list=mk('div','prod-list'); list.id='prod-list';
+  buildList(list); frag.append(list);
+  return frag;
+}
+
+function refreshList(){ const l=$('prod-list'); if(l){ l.innerHTML=''; buildList(l); } }
+
+function buildList(list){
+  list.innerHTML='';
+  let items=[...S.items].sort((a,b)=>{
+    const pa=PRI.includes(a.category_id)?-1:0, pb=PRI.includes(b.category_id)?-1:0;
+    if(pa!==pb) return pa-pb;
+    return (UO[a._cat?.u]||9)-(UO[b._cat?.u]||9);
+  });
+  if(S.filterU==='done') items=items.filter(p=>p.purchased);
+  else if(S.filterU!=='all') items=items.filter(p=>p._cat?.u===S.filterU);
+  if(S.filterQ){ const q=S.filterQ; items=items.filter(p=>(p.product_models?.model_name||p.custom_name||'').includes(q)||(p._cat?.he||'').includes(q)); }
+  if(!items.length){
+    const e=mk('div','empty');
+    const ei=mk('div','ei'); ei.textContent='📭';
+    const ep=mk('p'); ep.textContent='אין פריטים — לחץ + הוספת פריט';
+    e.append(ei,ep,mkBtn('+ הוספת פריט','bp',openAddItemModal));
+    list.append(e); return;
+  }
+  
+  // Group by category
+  const grouped = {};
+  items.forEach(item => {
+    const catId = item.category_id;
+    if(!grouped[catId]) grouped[catId] = [];
+    grouped[catId].push(item);
+  });
+  
+  // Sort category IDs so that PRI (Priority) items always appear first
+  const sortedCatIds = Object.keys(grouped).sort((a,b) => {
+    const aPri = PRI.includes(a);
+    const bPri = PRI.includes(b);
+    if(aPri && !bPri) return -1;
+    if(!aPri && bPri) return 1;
+    return 0;
+  });
+  
+  // Render each category accordion
+  sortedCatIds.forEach(catId => {
+    const cat = getCat(catId);
+    const catItems = grouped[catId];
+    
+    const catAccordion = mk('div', 'cat-accordion');
+    if (S.openCats.includes(catId)) catAccordion.classList.add('open');
+
+    const catHeader = mk('div', 'cat-header');
+    catHeader.onclick = () => {
+      catAccordion.classList.toggle('open');
+      if (catAccordion.classList.contains('open')) {
+        if (!S.openCats.includes(catId)) S.openCats.push(catId);
+      } else {
+        S.openCats = S.openCats.filter(id => id !== catId);
+      }
+    };
+    
+    const catTitle = mk('div', 'cat-title');
+    catTitle.style.cssText = 'display:flex;align-items:center;gap:12px';
+    const textSpan = mk('span');
+    textSpan.textContent = `${cat.icon} ${cat.he}`;
+    catTitle.append(textSpan);
+    
+    if (cat.u) {
+      catTitle.append(urgBadge(cat.u));
+    }
+    
+    const catCount = mk('span', 'cat-count');
+    catCount.textContent = `(${catItems.length})`;
+    catTitle.append(catCount);
+    
+    const catChev = mk('span', 'cat-chev');
+    catChev.textContent = '▼';
+    
+    catHeader.append(catTitle, catChev);
+    catAccordion.append(catHeader);
+    
+    const catBody = mk('div', 'cat-body');
+    
+    // Add product button at top of category
+    const addProdBtn = mk('div');
+    addProdBtn.style.cssText = 'padding: 12px 16px; border-bottom: 0.5px solid var(--brd); background: var(--s2)';
+    const addBtn = mkBtn('+ הוסף מוצר לקטגוריה', 'bp', () => openAddItemModal(catId));
+    addBtn.style.width = '100%';
+    addProdBtn.append(addBtn);
+    catBody.append(addProdBtn);
+    
+    catItems.forEach(item => {
+      const row = buildModelRow(item);
+      // Restore expanded state if this was the last opened row
+      if(S.openItemId && item.id === S.openItemId) row.classList.add('open');
+      catBody.append(row);
+    });
+    // If any item in this category is open, also open the category accordion
+    if(catItems.some(item => item.id === S.openItemId)) catAccordion.classList.add('open');
+    catAccordion.append(catBody);
+    
+    list.append(catAccordion);
+  });
+}
+
+/* ─── שורת מוצר (מודל) ─── */
+function buildModelRow(item){
+  const cat=item._cat||getCat(item.category_id);
+  const model=item.product_models;
+  const isPri=PRI.includes(item.category_id);
+  const prices=(item.product_prices||[]).sort((a,b)=>(a.price||99999)-(b.price||99999));
+  const best=prices[0];
+  const brandModel=model?((model.brands?.name||'')+' '+model.model_name).trim():item.custom_name||cat.he||'';
+
+  const row=mk('div','prod-row'+(isPri?' pri-row':'')+(item.purchased?' done-row':''));
+  row.dataset.uid=item.id;
+
+  const head=mk('div','rhead');
+  const ico=mk('div','rico'); 
+  
+  if(item.image_url || model?.image_url) {
+      const img = mk('img', 'prod-img');
+      img.src = item.image_url || model?.image_url;
+      img.onerror = () => { img.style.display='none'; ico.textContent=cat.icon||'📦'; };
+      ico.append(img);
+  } else {
+      ico.textContent=cat.icon||'📦';
+  }
+  
+  const nm=mk('div','rname'+(item.purchased?' struck':'')); nm.textContent=brandModel||cat.he||'';
+
+  const badges=mk('div','rbdgs');
+  if(item.purchased){ const pb=mk('span','bdg bbd'); pb.textContent='✓ נקנה'; badges.append(pb); }
+
+  head.append(ico, nm);
+
+  if(best?.price>0){
+    const rp=mk('span','rprice');
+    rp.textContent='₪'+best.price.toLocaleString();
+    rp.title = STORES[best.store_id]?.name || best.store_id || 'חנות';
+    head.append(rp);
+  }
+  
+  head.append(badges);
+  const chev=mk('span','rchev'); chev.textContent='▼';
+  const acts=mk('div','racts');
+  const delBtn=mk('button','btn bg bsm bico'); delBtn.textContent='🗑️'; delBtn.title='הסר פריט';
+  delBtn.onclick=async e=>{
+    e.stopPropagation();
+    if(!confirm('למחוק פריט זה?')) return;
+    await sb.from('user_items').delete().eq('id',item.id);
+    S.items=S.items.filter(i=>i.id!==item.id);
+    refreshList(); renderMain(); toast('הוסר');
+  };
+  acts.append(delBtn); head.append(acts,chev);
+  head.onclick=()=>{
+    row.classList.toggle('open');
+    if(row.classList.contains('open')) {
+      S.openItemId = item.id;
+    } else if(S.openItemId === item.id) {
+      S.openItemId = null;
+    }
+  };
+  row.append(head);
+
+  const body=mk('div','rbody');
+  
+  const topActionRow = mk('div');
+  topActionRow.style.cssText = 'margin-bottom:16px;display:flex';
+  const addLinkBtn = mkBtn('🔗 הוסף קישור מחנות', 'bp bsm', () => openAddLinkModal(item));
+  addLinkBtn.style.width = '100%';
+  topActionRow.append(addLinkBtn);
+  body.append(topActionRow);
+
+  if(prices.length){
+    const pricesWrap = mk('div');
+    pricesWrap.style.marginBottom = '16px';
+    const pTitle = mk('div');
+    pTitle.style.cssText = 'font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px';
+    pTitle.textContent = 'מחירים';
+    pricesWrap.append(pTitle);
+    
+    prices.forEach((p,i)=>{
+      const priceRow = mk('div');
+      priceRow.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 40px 10px 10px;background:var(--s2);border:0.5px solid var(--brd);border-radius:var(--rs);margin-bottom:6px;cursor:pointer;position:relative';
+      
+      if(p.variant_image){
+        const vImg = mk('img');
+        vImg.src = p.variant_image;
+        vImg.style.cssText = 'width:40px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--brd);flex-shrink:0';
+        vImg.onerror = () => vImg.style.display = 'none';
+        priceRow.append(vImg);
+      }
+      
+      const leftSide = mk('div');
+      leftSide.style.cssText = 'flex:1;display:flex;flex-direction:column;gap:3px';
+      
+      const storeRow = mk('div');
+      storeRow.style.cssText = 'display:flex;align-items:center;gap:6px';
+      
+      let storeLogoData = STORES[p.store_id]?.logo;
+      if(!storeLogoData && STORES[p.store_id]?.url){
+        try {
+          const urlObj = new URL(STORES[p.store_id].url);
+          storeLogoData = `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=128`;
+        } catch(e){}
+      }
+
+      if(storeLogoData){
+        const sLogo = mk('img');
+        sLogo.src = storeLogoData;
+        sLogo.style.cssText = 'width:16px;height:16px;object-fit:contain;border-radius:2px';
+        sLogo.onerror = () => sLogo.style.display = 'none';
+        storeRow.append(sLogo);
+      }
+      
+      const storeName = mk('div');
+      storeName.style.cssText = 'font-size:13px;font-weight:500;color:var(--tx)';
+      storeName.textContent = STORES[p.store_id]?.name || p.store_id || 'חנות';
+      storeRow.append(storeName);
+      
+      leftSide.append(storeRow);
+      
+      if(p.variant_note){
+        const vNote = mk('div');
+        vNote.style.cssText = 'font-size:11px;color:var(--t2);line-height:1.3';
+        vNote.textContent = p.variant_note.substring(0, 60);
+        leftSide.append(vNote);
+      }
+      
+      const priceVal = mk('div');
+      priceVal.style.cssText = 'font-size:15px;font-weight:500;color:var(--grn);flex-shrink:0';
+      priceVal.textContent = '₪' + p.price.toLocaleString();
+      
+      const delBtn = mk('button');
+      delBtn.textContent = '×';
+      delBtn.style.cssText = 'position:absolute;right:8px;width:24px;height:24px;border-radius:50%;background:var(--red);color:white;border:none;cursor:pointer;font-size:16px;line-height:1;padding:0;display:flex;align-items:center;justify-content:center';
+      delBtn.title = 'מחק מחיר';
+      delBtn.onclick = async(e) => {
+        e.stopPropagation();
+        if(confirm('למחוק מחיר זה?')){
+          await sb.from('product_prices').delete().eq('id',p.id);
+          item.product_prices=item.product_prices.filter(x=>x.id!==p.id);
+          swapRow(item); renderMain();
+        }
+      };
+      
+      priceRow.onclick = () => {
+        if(p.product_url) window.open(p.product_url, '_blank');
+      };
+      priceRow.onmouseover = () => priceRow.style.background = 'var(--s3)';
+      priceRow.onmouseout = () => priceRow.style.background = 'var(--s2)';
+      
+      priceRow.append(leftSide, priceVal, delBtn);
+      pricesWrap.append(priceRow);
+    });
+    body.append(pricesWrap);
+  } else {
+    const np=mk('div'); 
+    np.style.cssText='font-size:12px;color:var(--t3);font-style:italic;padding:6px 0;margin-bottom:16px';
+    np.textContent='אין מחירים עדיין — הדבק קישור לחנות למטה'; 
+    body.append(np);
+  }
+
+  const foot=mk('div','rfoot');
+  const chk=mk('input'); chk.type='checkbox'; chk.checked=!!item.purchased;
+  chk.onchange=async()=>{
+    await sb.from('user_items').update({purchased:chk.checked,purchased_at:chk.checked?new Date().toISOString():null}).eq('id',item.id);
+    item.purchased=chk.checked; swapRow(item); renderMain();
+  };
+  const cl=mk('label','chk-lbl'); cl.append(chk,tx(item.purchased?'נקנה ✓':'סמן כנקנה')); 
+  foot.append(cl);
+  body.append(foot);
+
+  row.append(body);
+  return row;
+}
+
+function swapRow(item){
+  const old=document.querySelector('[data-uid="'+item.id+'"]');
+  if(old){ 
+    const wasOpen = old.classList.contains('open');
+    if(wasOpen) S.openItemId = item.id;
+    const nr=buildModelRow(item); 
+    if(wasOpen) nr.classList.add('open'); 
+    old.replaceWith(nr); 
+  }
+}
+
+function openPriceModal(item, url, scraped = {}){
+  const d=mk('div');
+  const sTitle = scraped.name || scraped.title || '';
+  const sImg = scraped.image_url || scraped.image || '';
+  const sPrice = scraped.price || '';
+  const sDesc = scraped.description || '';
+  const sStoreId = scraped.store_id || 'other';
+  const sStoreName = scraped.store_name || '';
+
+  // Rich Preview Section
+  const preview = mk('div'); 
+  preview.style.cssText = 'background:var(--s2);border:1px solid var(--brd);border-radius:var(--rs);padding:14px;margin-bottom:18px';
+  
+  const pHeader = mk('div');
+  pHeader.style.cssText = 'display:flex;gap:15px;margin-bottom:12px';
+  
+  if (sImg) {
+    const img = mk('img'); 
+    img.src = sImg; 
+    img.style.cssText = 'width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--brd2);background:#fff';
+    pHeader.append(img);
+  }
+  
+  const pInfo = mk('div'); pInfo.style.flex = '1';
+  const pName = mk('div'); pName.style.cssText = 'font-size:14px;font-weight:700;color:var(--tx);margin-bottom:4px;line-height:1.3'; 
+  pName.textContent = sTitle || 'מוצר מהרשת';
+  
+  const pPriceTxt = mk('div'); pPriceTxt.style.cssText = 'font-size:16px;font-weight:800;color:var(--grn);margin-bottom:6px';
+  pPriceTxt.textContent = sPrice ? '₪' + sPrice.toLocaleString() : 'מחיר לא זוהה';
+  
+  const pStoreTag = mk('div'); pStoreTag.style.cssText = 'font-size:11px;color:var(--t2);font-weight:600;display:flex;align-items:center;gap:6px';
+  
+  const pStoreLogoData = scraped.store_logo_url || STORES[sStoreId]?.logo;
+  if(pStoreLogoData){
+    const sLogo = mk('img');
+    sLogo.src = pStoreLogoData;
+    sLogo.style.cssText = 'width:14px;height:14px;object-fit:contain;border-radius:2px';
+    sLogo.onerror = () => sLogo.style.display = 'none';
+    pStoreTag.append(sLogo);
+  } else {
+    // If no logo and we have a URL, try favicon fallback
+    let fallbackLogo = "";
+    try {
+      const origin = new URL(url).origin;
+      fallbackLogo = `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=128`;
+    } catch(e){}
+    
+    if (fallbackLogo) {
+      const sLogo = mk('img');
+      sLogo.src = fallbackLogo;
+      sLogo.style.cssText = 'width:14px;height:14px;object-fit:contain;border-radius:2px';
+      sLogo.onerror = () => {
+        sLogo.style.display = 'none';
+        const sEmoji = mk('span'); sEmoji.textContent = '🏪';
+        pStoreTag.prepend(sEmoji);
+      };
+      pStoreTag.append(sLogo);
+    } else {
+      const sEmoji = mk('span'); sEmoji.textContent = '🏪';
+      pStoreTag.append(sEmoji);
+    }
+  }
+  
+  const sNameTxt = mk('span'); 
+  sNameTxt.textContent = ' חנות: ' + (STORES[sStoreId]?.name || sStoreName || 'לא ידוע');
+  pStoreTag.append(sNameTxt);
+  
+  pInfo.append(pName, pPriceTxt, pStoreTag);
+  pHeader.append(pInfo);
+  preview.append(pHeader);
+
+  if (sDesc) {
+    const pDesc = mk('div'); 
+    pDesc.style.cssText = 'font-size:11px;color:var(--t2);line-height:1.5;padding:8px;background:rgba(0,0,0,0.03);border-radius:6px';
+    pDesc.textContent = sDesc;
+    preview.append(pDesc);
+  }
+  d.append(preview);
+
+  // Form Fields
+  const storeSel=mkSel([['','-- בחר חנות --'],...Object.entries(STORES).map(([k,v])=>[k,v.name]), ['other', '+ חנות חדשה...']]);
+  if(STORES[sStoreId]) storeSel.value = sStoreId;
+  else storeSel.value = 'other';
+
+  const priceInp=mkInp('number','מחיר ב-₪', sPrice);
+  const noteInp=mkInp('text','הערה (אופציונלי)', sDesc ? sDesc.substring(0, 50) : '');
+  
+  const newStoreSection = mk('div');
+  newStoreSection.style.cssText = 'background:var(--goldl);border:1px dashed var(--gold);border-radius:var(--rs);padding:12px;margin-top:10px;margin-bottom:15px;display:' + (storeSel.value === 'other' ? 'block' : 'none');
+  const sNameInp = mkInp('text', 'שם החנות (למשל: בייבי לאב)', sStoreName || '');
+  const sUrlInp = mkInp('url', 'כתובת האתר (http...)', new URL(url).origin);
+  newStoreSection.append(mkFld('שם חנות חדשה', [sNameInp]), mkFld('אתר החנות', [sUrlInp]));
+
+  storeSel.onchange = () => {
+    newStoreSection.style.display = (storeSel.value === 'other' ? 'block' : 'none');
+  };
+
+  const r=mk('div'); r.style.cssText='display:flex;gap:8px;justify-content:flex-end;margin-top:16px;border-top:1px solid var(--brd);padding-top:16px';
+  r.append(mkBtn('ביטול','bs bsm',closeModal));
+  
+  const saveBtn = mkBtn('שמור מחיר','bp bsm',async()=>{
+    let price=Number(priceInp.value), store=storeSel.value;
+    if(!price||price<=0){ toast('נדרש מחיר תקין',true); return; }
+    
+    saveBtn.disabled = true; saveBtn.textContent = 'שומר...';
+
+    if(store === 'other') {
+      const sName = sNameInp.value.trim();
+      const sUrl = sUrlInp.value.trim();
+      if(!sName || !sUrl){ toast('חובה להזין שם חנות ואתר', true); saveBtn.disabled=false; saveBtn.textContent='שמור מחיר'; return; }
+      
+      const derivedId = sName.toLowerCase().replace(/[^a-z0-9]/g, '');
+      
+      if (STORES[derivedId]) {
+        store = derivedId;
+      } else {
+        const { error: se } = await sb.from('stores').upsert({
+          id: derivedId,
+          name_he: sName,
+          name_en: sName,
+          url: sUrl,
+          active: true
+        });
+        if(se) { toast(se.message, true); saveBtn.disabled=false; saveBtn.textContent='שמור מחיר'; return; }
+        STORES[derivedId] = { name: sName, url: sUrl };
+        store = derivedId;
+      }
+    }
+
+    if(!store){ toast('בחר חנות',true); saveBtn.disabled=false; saveBtn.textContent='שמור מחיר'; return; }
+
+    const {data:newPrice,error}=await sb.from('product_prices').insert({
+      model_id:item.model_id||null, user_item_id:item.id,
+      store_id:store, price, currency:'ILS',
+      product_url:url, note:noteInp.value||null, added_by:S.user.id,
+      variant_image: sImg || null,
+      variant_note: sTitle || null
+    }).select().single();
+    
+    if(error){ toast(error.message,true); saveBtn.disabled=false; saveBtn.textContent='שמור מחיר'; return; }
+    
+    if(!item.product_prices) item.product_prices=[];
+    item.product_prices.push(newPrice);
+    item.product_prices.sort((a,b)=>(a.price||99999)-(b.price||99999));
+    S.openItemId = item.id;
+    closeModal(); swapRow(item); toast('מחיר נשמר!');
+  });
+  
+  r.append(saveBtn);
+  d.append(mkFld('חנות',[storeSel]), newStoreSection, mkFld('מחיר סופי (₪)',[priceInp]), mkFld('הערה / דגם ספציפי',[noteInp]), r);
+  openModal('אישור פרטי מחיר', d);
+}
+
+function openAddLinkModal(item) {
+  const d=mk('div');
+  d.style.cssText = 'padding:4px';
+  const sub=mk('div','sub'); sub.style.marginBottom='16px'; sub.textContent='הדבק כאן קישור לדף המוצר באתר החנות (למשל ממוצצים, שילב, עגליס, וכו\'). המערכת תסרוק אוטומטית את המחיר, השם והתמונה.';
+  
+  const urlRow=mk('div');
+  urlRow.style.cssText = 'display:flex;gap:8px;margin-bottom:8px';
+  const urlInp=mkInp('url','הדבק קישור מחנות…');
+  urlInp.style.flex = '1';
+  
+  const urlStatus=mk('div'); 
+  urlStatus.style.cssText = 'font-size:12px;margin-top:6px;color:var(--t2);min-height:20px';
+
+  const fetchBtn=mkBtn('שאיבת נתונים','bp bsm',async()=>{
+    const url=urlInp.value.trim();
+    if(!url||!url.startsWith('http')){ toast('קישור לא תקין',true); return; }
+    
+    fetchBtn.disabled = true;
+    fetchBtn.textContent = 'סורק...';
+    urlStatus.style.color = 'var(--t2)';
+    urlStatus.textContent = '🔍 טוען נתונים...';
+    
+    try {
+      const { data, error } = await sb.functions.invoke('scrape-product', { 
+        body: { url: url },
+        headers: { Authorization: `Bearer ${SUPABASE_ANON}` }
+      });
+      if (error) throw new Error(JSON.stringify(error)); 
+      if (!data) throw new Error('No data returned');
+      
+      const pd = data.data || data;
+      let finalImage = pd.image_url || pd.image || '';
+      if (finalImage && finalImage.startsWith('/')) {
+          try { finalImage = new URL(url).origin + finalImage; } catch(e){}
+      }
+      const scrapedTitle = pd.name || pd.title || '';
+
+      const updates = { custom_url: url };
+      if (scrapedTitle && !item.model_id) { updates.custom_name = scrapedTitle.substring(0, 100); item.custom_name = updates.custom_name; }
+      if (finalImage && !item.image_url) { updates.image_url = finalImage; item.image_url = finalImage; }
+      
+      await sb.from('user_items').update(updates).eq('id',item.id);
+      item.custom_url = url;
+      
+      urlStatus.style.color = 'var(--gd)';
+      urlStatus.textContent = '✅ נשאב בהצלחה!';
+      closeModal();
+      openPriceModal(item, url, pd);
+      
+    } catch (err) {
+      console.error("Scrape err:", err);
+      urlStatus.style.color = 'var(--org)';
+      urlStatus.textContent = '⚠️ לא הצלחנו לשאוב אוטומטית. נפתח מסך חלופי.';
+      await sb.from('user_items').update({custom_url:url}).eq('id',item.id);
+      item.custom_url=url;
+      setTimeout(()=> { closeModal(); openPriceModal(item, url, { name: 'מוצר ידני', image_url: '' }); }, 1500);
+    } finally {
+      fetchBtn.disabled = false;
+      fetchBtn.textContent = 'שאיבת נתונים';
+      swapRow(item);
+    }
+  });
+
+  urlRow.append(urlInp, fetchBtn);
+  d.append(sub, urlRow, urlStatus);
+  openModal('הוסף מחיר מהרשת', d);
+}
+
+// Scrape and extract brand/model for new product
+async function scrapeNewModel(url, targetWrap, onSuccessCallback, preselectedCat = null){
+  try {
+    const { data, error } = await sb.functions.invoke('scrape-product', { 
+      body: { url: url },
+      headers: { Authorization: `Bearer ${SUPABASE_ANON}` }
+    });
+    if (error) { toast(error.message, true); return; }
+    const pd = data.data || data;
+    const title = pd.name || pd.title || '';
+    let scrapedImg = pd.image_url || pd.image || '';
+    if(scrapedImg.startsWith('/')) {
+      try { scrapedImg = new URL(url).origin + scrapedImg; } catch(e){}
+    }
+    
+    // Show preview and editable fields
+    let preview = targetWrap.querySelector('.new-model-preview');
+    if(!preview){
+      preview = mk('div', 'new-model-preview');
+      preview.style.cssText = 'background:var(--gl);border:1px solid var(--grn);border-radius:var(--rs);padding:14px;margin-top:12px';
+      targetWrap.append(preview);
+    }
+    preview.innerHTML = '';
+    
+    const previewTitle = mk('div');
+    previewTitle.style.cssText = 'font-size:13px;font-weight:700;color:var(--gd);margin-bottom:12px;border-bottom:1px solid rgba(0,0,0,0.05);padding-bottom:8px';
+    previewTitle.textContent = '✅ המידע נשאב! אנא וודא/עדכן את הפרטים:';
+    preview.append(previewTitle);
+    
+    const row1 = mk('div'); row1.style.cssText = 'display:flex;gap:12px;margin-bottom:12px';
+    if(scrapedImg){
+      const img = mk('img');
+      img.src = scrapedImg;
+      img.style.cssText = 'width:90px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--brd);background:#fff';
+      row1.append(img);
+    }
+    
+    const r1c2 = mk('div'); r1c2.style.flex = '1';
+    const catSel=mkSel([['','-- שייך לקטגוריה (חובה) --'],...CATS.map(c=>[c.id,c.icon+' '+c.he])], preselectedCat || '');
+    const brandInp = mkInp('text', 'מותג (Bugaboo, Cybex...)', pd.brand || '');
+    r1c2.append(mkFld('קטגוריה', [catSel]), mkFld('מותג', [brandInp]));
+    row1.append(r1c2);
+    preview.append(row1);
+    
+    const modelInp = mkInp('text', 'שם הדגם המדויק', pd.name || pd.title || '');
+    const descInp = mkInp('text', 'תיאור קצר (למשל: צבע שחור, מהדורה מוגבלת)', pd.description ? pd.description.substring(0, 100) : '');
+    const priceInp = mkInp('number', 'מחיר נוכחי באתר', pd.price || '');
+    const imgInp = mkInp('url', 'קישור לתמונה', scrapedImg);
+    
+    preview.append(
+      mkFld('שם הדגם', [modelInp]),
+      mkFld('תיאור קצר', [descInp]),
+      mkFld('מחיר באתר', [priceInp]),
+      mkFld('קישור לתמונה', [imgInp])
+    );
+
+    // New Store Logic
+    let storeSection = null;
+    if(pd.store_id === 'other') {
+      storeSection = mk('div');
+      storeSection.style.cssText = 'background:rgba(255,165,0,0.05);border:1px dashed var(--org);border-radius:var(--rs);padding:10px;margin-top:10px;margin-bottom:12px';
+      const stitle = mk('div'); stitle.style.cssText = 'font-size:11px;font-weight:700;color:var(--org);margin-bottom:8px';
+      stitle.textContent = '🏪 חנות לא מוכרת - הגדר חנות חדשה (חובה)';
+      const sNameInp = mkInp('text', 'שם החנות (למשל: בייבי לאב)', pd.store_name || '');
+      const sUrlInp = mkInp('url', 'אתר הבית של החנות (http...)', new URL(url).origin);
+      storeSection.append(stitle, mkFld('שם החנות', [sNameInp]), mkFld('אתר החנות', [sUrlInp]));
+      preview.append(storeSection);
+      preview.dataset.sName = ''; // Mark that we need store info
+    }
+    
+    const saveBtn = mkBtn('✨ שמור והוסף למוצרים שלי', 'bp bfw', async() => {
+      const brandName = brandInp.value.trim();
+      const modelName = modelInp.value.trim();
+      const catId = catSel.value;
+      const price = parseFloat(priceInp.value) || 0;
+      const desc = descInp.value.trim();
+      const imageUrl = imgInp.value.trim();
+      
+      if(!brandName || !modelName || !catId){ toast('יש למלא מותג, שם דגם וקטגוריה', true); return; }
+      
+      let finalStoreId = pd.store_id;
+      if(pd.store_id === 'other') {
+        const sName = storeSection.querySelector('input[type="text"]').value.trim();
+        const sUrl = storeSection.querySelector('input[type="url"]').value.trim();
+        if(!sName || !sUrl){ toast('חובה להזין שם חנות ואת כתובת האתר שלה', true); return; }
+        
+        const cleanUrl = new URL(sUrl).hostname.replace('www.', '').toLowerCase();
+        finalStoreId = cleanUrl.replace(/[^a-z0-9]/g, '');
+        // Create store if not exists
+        const storeLogo = scraped.store_logo_url || '';
+        await sb.from('stores').upsert({
+          id: finalStoreId,
+          name_he: sName,
+          name_en: sName,
+          url: sUrl,
+          logo_url: storeLogo,
+          active: true
+        });
+        
+        // Sync with local STORES object for immediate UI update
+        if (!STORES[finalStoreId]) {
+          STORES[finalStoreId] = {
+            name: sName,
+            url: sUrl,
+            logo: storeLogo
+          };
+        }
+      }
+
+      saveBtn.disabled = true; saveBtn.textContent = '⏳ שומר נתונים...';
+      
+      // 1. Handle Brand
+      let {data: brandData} = await sb.from('brands').select('id').eq('name', brandName).single();
+      if(!brandData) {
+        const {data: nb} = await sb.from('brands').insert({name: brandName}).select().single();
+        brandData = nb;
+      }
+      
+      // 2. Handle Model
+      let {data: existingModel} = await sb.from('product_models').select('*').eq('category_id', catId).eq('brand_id', brandData.id).eq('model_name', modelName).single();
+      if(!existingModel) {
+        const {data: nm, error: me} = await sb.from('product_models').insert({
+          category_id: catId,
+          brand_id: brandData.id,
+          model_name: modelName,
+          description: desc,
+          image_url: imageUrl || null
+        }).select('*, brands(name)').single();
+        if(me){ toast(me.message, true); saveBtn.disabled=false; return; }
+        existingModel = nm;
+        S.models.push(nm);
+      }
+      
+      // 3. Handle Price (Global catalog)
+      if(price > 0 && finalStoreId !== 'other') {
+        await sb.from('product_prices').upsert({
+          model_id: existingModel.id,
+          store_id: finalStoreId,
+          price: price,
+          product_url: url,
+          image_url: imageUrl || null,
+          in_stock: true,
+          last_checked: new Date().toISOString()
+        });
+      }
+
+      onSuccessCallback(existingModel, url, imageUrl);
+    });
+    
+    preview.append(saveBtn);
+  } catch(e){
+    console.error('Scrape error:', e);
+    toast('שגיאה בשאיבת המידע', true);
+  }
+}
+
+function openAddItemModal(preselectedCat = null){
+  const d=mk('div');
+  
+  // Search Bar Section
+  const searchWrap = mk('div');
+  searchWrap.style.cssText = 'position:relative;margin-bottom:20px;';
+  
+  const searchTitle = mk('div');
+  searchTitle.style.cssText = 'font-size:14px;font-weight:700;margin-bottom:8px';
+  searchTitle.textContent = '🔎 חפש דגם במאגר ע"י שם או מותג';
+  
+  const searchInp = mkInp('text', 'למשל: עגלת בוגבו, סייבקס...');
+  searchInp.style.width = '100%';
+  searchInp.style.fontSize = '14px';
+  
+  const searchResults = mk('div');
+  searchResults.style.cssText = 'position:absolute;top:100%;left:0;right:0;background:var(--surf);border:1px solid var(--brd);border-radius:var(--rs);max-height:200px;overflow-y:auto;z-index:20;display:none;box-shadow:var(--shadow2)';
+  
+  searchInp.oninput = () => {
+    const q = searchInp.value.trim().toLowerCase();
+    searchResults.innerHTML = '';
+    
+    // Optionally narrow by passed category if triggered from inside a bracket
+    const validModels = preselectedCat ? S.models.filter(m => m.category_id === preselectedCat) : S.models;
+    
+    if(!q || q.length < 2) {
+      searchResults.style.display = 'none';
+      return;
+    }
+    
+    const matches = validModels.filter(m => {
+      const bn = (m.brands?.name || '').toLowerCase();
+      const mn = (m.model_name || '').toLowerCase();
+      return bn.includes(q) || mn.includes(q);
+    });
+    
+    if(matches.length > 0) {
+      searchResults.style.display = 'block';
+      matches.forEach(m => {
+        const item = mk('div');
+        item.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px;cursor:pointer;border-bottom:0.5px solid var(--brd2)';
+        item.onmouseover = () => item.style.background = 'var(--s2)';
+        item.onmouseout = () => item.style.background = 'transparent';
+        
+        const cat = getCat(m.category_id);
+        
+        let iHtml = '';
+        if(m.image_url) iHtml = `<img src="${m.image_url}" style="width:36px;height:36px;object-fit:cover;border-radius:4px;flex-shrink:0" onerror="this.style.display='none'">`;
+        else iHtml = `<div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:var(--s2);border-radius:4px;font-size:18px;flex-shrink:0">${cat.icon||'📦'}</div>`;
+        
+        const txt = `<div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--tx)">${m.brands?.name||''} ${m.model_name}</div><div style="font-size:11px;color:var(--t2)">${cat.he||''}</div></div>`;
+        item.innerHTML = iHtml + txt;
+        
+        item.onclick = async () => {
+          const verify = mk('div');
+          verify.innerHTML = `<p style="margin-bottom:12px">האם להוסיף את <b>${m.brands?.name||''} ${m.model_name}</b> לרשימה שלך?</p>`;
+          
+          Object.values(document.querySelectorAll('.modal-overlay')).forEach(n => n.remove()); // close any modals
+          
+          const d2 = mk('div');
+          d2.append(verify);
+          const r = mk('div'); r.style.cssText = 'display:flex;gap:8px;justify-content:flex-end';
+          r.append(mkBtn('ביטול', 'bs bsm', closeModal));
+          r.append(mkBtn('הוסף לרשימה ✓', 'bp bsm', async() => {
+             const {data,error}=await sb.from('user_items')
+              .insert({
+                user_id:S.user.id,
+                category_id: m.category_id,
+                model_id: m.id,
+                custom_name: null,
+                official_url: m.product_url || null,
+                image_url: m.image_url || null
+              })
+              .select('*, product_models(*, brands(name))').single();
+              
+            if(error){ toast(error.message,true); return; }
+            data._cat=getCat(data.category_id);
+            if(!data.product_prices) data.product_prices = []; 
+            S.items.push(data);
+            closeModal(); refreshList(); renderMain(); toast('נוסף! ✅');
+          }));
+          d2.append(r);
+          openModal('אישור הוספה', d2);
+        };
+        searchResults.append(item);
+      });
+    } else {
+      searchResults.style.display = 'block';
+      const empty = mk('div');
+      empty.style.cssText = 'padding:14px;font-size:12px;color:var(--t2);text-align:center';
+      empty.textContent = 'לא נמצאו דגמים תואמים, אפשר להשתמש בקישור למטה כדי להוסיף.';
+      searchResults.append(empty);
+    }
+  };
+  
+  document.addEventListener('click', (e) => {
+    if(!searchWrap.contains(e.target)) searchResults.style.display = 'none';
+  });
+  
+  searchWrap.append(searchTitle, searchInp, searchResults);
+
+  // New model flow — URL scrape
+  const newModelWrap = mk('div');
+  newModelWrap.style.cssText = 'background:var(--s2);border:1px solid var(--brd);border-radius:var(--rs);padding:14px;margin-top:10px';
+  const newTitle = mk('div');
+  newTitle.style.cssText = 'font-size:13px;font-weight:700;margin-bottom:8px';
+  newTitle.textContent = '🛠️ לא מצאת? הוסף דגם חדש משלך';
+  
+  const newUrlInp = mkInp('url', 'הדבק קישור לדף המוצר (למשל bugaboo.com, shilav.co.il)');
+  const newUrlNote = mk('div'); newUrlNote.style.cssText = 'font-size:11px;color:var(--t2);margin-top:-8px;margin-bottom:12px';
+  newUrlNote.textContent = '💡 המערכת תזהה ותשאב אוטומטית את המותג, הדגם והתמונה מהקישור';
+  
+  const targetWrap = mk('div');
+  
+  const onSuccessCallback = async (newModel, url, imageUrl) => {
+      const {data: userItem, error: itemError} = await sb.from('user_items').insert({
+        user_id: S.user.id,
+        category_id: newModel.category_id,
+        model_id: newModel.id,
+        official_url: url,
+        image_url: imageUrl || null
+      }).select('*, product_models(*, brands(name))').single();
+      
+      if(itemError){ toast(itemError.message, true); return; }
+      userItem._cat = getCat(userItem.category_id);
+      if(!userItem.product_prices) userItem.product_prices = [];
+      S.items.push(userItem);
+      
+      closeModal(); refreshList(); renderMain(); toast('המוצר נוסף בהצלחה!');
+  };
+
+  const scrapeBtn = mkBtn('🔍 שאב מידע מקישור', 'bp bsm', async() => {
+    const url = newUrlInp.value.trim();
+    if(!url || !url.startsWith('http')){ toast('הזן קישור תקין לחנות/יצרן', true); return; }
+    scrapeBtn.disabled = true; scrapeBtn.textContent = '⏳ שואב...';
+    await scrapeNewModel(url, targetWrap, onSuccessCallback, preselectedCat);
+    scrapeBtn.disabled = false; scrapeBtn.textContent = '🔍 שאב מידע מקישור';
+  });
+  
+  newModelWrap.append(newTitle, mkFld('קישור רשמי למוצר', [newUrlInp]), newUrlNote, scrapeBtn, targetWrap);
+  
+  d.append(searchWrap, newModelWrap);
+  openModal('חיפוש והוספת פריט',d);
+  
+  // Focus search box smoothly
+  setTimeout(()=> searchInp.focus(), 100);
+}
+
+/* ═══════════════════════════════════════════════
+   ציר זמן ומשלוחים
+═══════════════════════════════════════════════ */
+function buildGantt(){
+  if(!S.profile?.due_date){ const e=mk('div','sub'); e.textContent='לא הוגדר תאריך לידה — עדכן בהגדרות'; return e; }
+  const due=new Date(S.profile.due_date);
+  const now=new Date(); now.setDate(1);
+  const end=new Date(due); end.setMonth(end.getMonth()+2);
+  const total=(end-now)/86400000;
+  const pct=d=>Math.max(0,Math.min(97,(d-now)/86400000/total*100));
+  const months=[]; for(let d=new Date(now);d<=end;d.setMonth(d.getMonth()+1)) months.push(new Date(d));
+
+  const wrap=mk('div'); wrap.style.cssText='background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);padding:18px;overflow-x:auto;box-shadow:var(--shadow)';
+  const gh=mk('h3'); gh.style.marginBottom='14px'; gh.textContent='📅 ציר זמן רכישות'; wrap.append(gh);
+  const mr=mk('div'); mr.style.cssText='display:flex;min-width:520px;margin-bottom:4px';
+  const sp=mk('div'); sp.style.cssText='width:185px;flex-shrink:0'; mr.append(sp);
+  const mlr=mk('div'); mlr.style.cssText='flex:1;display:flex';
+  months.forEach(m=>{ const gm=mk('div'); gm.style.cssText='flex:1;font-size:9px;color:var(--t3);font-weight:700;text-align:center;text-transform:uppercase'; gm.textContent=m.toLocaleDateString('he-IL',{month:'short',year:'2-digit'}); mlr.append(gm); });
+  mr.append(mlr); wrap.append(mr);
+
+  S.items.filter(p=>p._cat?.u!=='low').forEach(p=>{
+    const ob=new Date(due); ob.setDate(ob.getDate()-(6*7+14));
+    const lp=pct(ob), wp=Math.max(2,pct(due)-pct(ob));
+    const row=mk('div'); row.style.cssText='display:flex;align-items:center;margin-bottom:5px;min-width:520px';
+    const lbl=mk('div'); lbl.style.cssText='width:185px;font-size:11px;font-weight:500;flex-shrink:0;padding-left:10px;line-height:1.3;text-align:right'+(p.purchased?';text-decoration:line-through;color:var(--t3)':'');
+    const cat=p._cat||{};const model=p.product_models;
+    lbl.textContent=(cat.icon||'')+' '+(model?((model.brands?.name||'')+' '+model.model_name).slice(0,20):cat.he||'');
+    const trk=mk('div'); trk.style.cssText='flex:1;height:22px;border-radius:6px;position:relative;background:var(--s2);border:1px solid var(--brd)';
+    const bar=mk('div'); bar.style.cssText='position:absolute;top:2px;height:18px;border-radius:5px;display:flex;align-items:center;padding:0 6px;font-size:9px;font-weight:700;white-space:nowrap;overflow:hidden;color:'+(cat.u==='medium'?'var(--tx)':'#fff')+';left:'+lp+'%;width:'+wp+'%';
+    bar.style.background=p.purchased?'#b8b4ae':({critical:'var(--red)',high:'var(--org)',medium:'var(--ylw)',low:'var(--grn)'}[cat.u]||'#888');
+    bar.textContent=p.purchased?'✓':new Date(ob).toLocaleDateString('he-IL',{month:'short',day:'numeric'});
+    trk.append(bar); row.append(trk,lbl); wrap.append(row);
+  });
+  return wrap;
+}
+
+function buildDelivery(){
+  if(!S.profile?.due_date){ const e=mk('div','sub'); e.textContent='לא הוגדר תאריך לידה'; return e; }
+  const due=new Date(S.profile.due_date);
+  const frag=document.createDocumentFragment();
+  const dh=mk('h3'); dh.style.marginBottom='12px'; dh.textContent='🚚 לוח משלוחים'; frag.append(dh);
+  const list=mk('div'); list.style.cssText='display:flex;flex-direction:column;gap:8px';
+  const sorted=S.items.filter(p=>!p.purchased&&p._cat?.u!=='low').map(p=>{
+    const ob=new Date(due); ob.setDate(ob.getDate()-(6*7+14));
+    return{...p,ob,days:Math.round((ob-new Date())/86400000)};
+  }).sort((a,b)=>a.ob-b.ob);
+  if(!sorted.length){
+    const e=mk('div','empty'); const ei=mk('div','ei'); ei.textContent='🎉';
+    const ep=mk('p'); ep.textContent='כל הפריטים הוזמנו!'; e.append(ei,ep); list.append(e);
+  }
+  sorted.forEach(p=>{
+    const item=mk('div'); item.style.cssText='background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow)';
+    const cat=p._cat||{}; const model=p.product_models;
+    const dot=mk('div'); const clr={critical:'var(--red)',high:'var(--org)',medium:'var(--ylw)',low:'var(--grn)'}; dot.style.cssText='width:9px;height:9px;border-radius:50%;flex-shrink:0;background:'+(clr[cat.u]||'#888');
+    const ico=mk('span'); ico.style.cssText='font-size:20px;flex-shrink:0'; ico.textContent=cat.icon||'📦';
+    const info=mk('div'); info.style.flex='1';
+    const dn=mk('div'); dn.style.cssText='font-size:13px;font-weight:600'; dn.textContent=model?((model.brands?.name||'')+' '+model.model_name):cat.he||'';
+    info.append(dn); if(cat.u) info.append(urgBadge(cat.u));
+    const dates=mk('div'); dates.style.cssText='text-align:left;flex-shrink:0';
+    const col=p.days<0?'var(--red)':p.days<14?'var(--org)':'var(--grn)';
+    const dd=mk('div'); dd.style.cssText='font-size:15px;font-weight:800;color:'+col; dd.textContent=new Date(p.ob).toLocaleDateString('he-IL',{month:'short',day:'numeric'}); dates.append(dd);
+    if(p.days<0){ const ds=mk('div'); ds.style.cssText='font-size:10px;color:var(--red);font-weight:600'; ds.textContent='באיחור! '+Math.abs(p.days)+' ימים'; dates.append(ds); }
+    else if(p.days<14){ const ds=mk('div'); ds.style.cssText='font-size:10px;color:var(--org);font-weight:600'; ds.textContent='עוד '+p.days+' ימים'; dates.append(ds); }
+    item.append(dates,ico,info,dot); list.append(item);
+  });
+  frag.append(list); return frag;
+}
+
+/* ═══════════════════════════════════════════════
+   לוח ניהול (Admin)
+═══════════════════════════════════════════════ */
+function buildAdmin(){
+  const wrap=mk('div');
+  const h2=mk('h2'); h2.textContent = '⚙️ לוח ניהול'; h2.style.marginBottom = '16px'; wrap.append(h2);
+  const at=mk('div','mtabs'); at.style.maxWidth = '400px';
+  const tabs = [['models','📚 דגמים'],['stores','🏪 חנויות'],['users','👥 משתמשים']];
+  let aTab = 'models';
+  tabs.forEach(([v,l])=>{
+    const b = mk('button','mtab'+(aTab===v?' on':'')); b.textContent = l;
+    b.onclick=()=>{ aTab=v; tabs.forEach(([tv])=>{ const bt=at.querySelector('[data-v="'+tv+'"]'); if(bt) bt.classList.toggle('on',tv===v); }); loadTab(); };
+    b.dataset.v = v; at.append(b);
+  });
+  wrap.append(at);
+  const body = mk('div'); body.id = 'admin-body'; wrap.append(body);
+  async function loadTab(){
+    body.innerHTML = ''; body.style.opacity = '.4';
+    if(aTab === 'models') body.append(await buildAdminModels());
+    else if(aTab === 'stores') body.append(await buildAdminStores());
+    else body.append(await buildAdminUsers());
+    body.style.opacity = '1';
+  }
+  loadTab(); return wrap;
+}
+
+async function buildAdminStores(){
+  const wrap = mk('div');
+  const actionsWrap = mk('div'); actionsWrap.style.cssText = 'display:flex; justify-content:space-between; align-items:center; margin-bottom:12px';
+  const addBtn = mkBtn('+ הוסף חנות','bp bsm', () => openAddStoreModal(() => loadAdminStores()));
+  actionsWrap.append(addBtn);
+  wrap.append(actionsWrap);
+
+  const table = mk('table','admin-table');
+  const thead = mk('thead'); const hr = mk('tr');
+  ['לוגו','','','שם (עברית)','שם (אנגלית)','כתובת אתר','פעיל'].forEach(h=>{ const th = mk('th'); th.textContent = h; hr.append(th); });
+  thead.append(hr); table.append(thead);
+  const tbody = mk('tbody');
+
+  const loadAdminStores = async () => {
+    tbody.innerHTML = '';
+    const { data: stores } = await sb.from('stores').select('*').order('name_he');
+    (stores || []).forEach(s => {
+      const tr = mk('tr');
+      // Logo
+      const imgTd = mk('td');
+      const logoUrl = s.logo_url || (s.url ? `https://www.google.com/s2/favicons?domain=${new URL(s.url).hostname}&sz=128` : '');
+      if(logoUrl){
+        const thumb = mk('img'); thumb.src = logoUrl;
+        thumb.style.cssText = 'width:32px;height:32px;object-fit:contain;border-radius:4px;border:1px solid var(--brd);display:block';
+        thumb.onerror = () => { thumb.style.display = 'none'; }
+        imgTd.append(thumb);
+      }
+      tr.append(imgTd);
+      
+      // Edit
+      const etd = mk('td'); etd.append(mkBtn('✏️','bg bsm',() => openEditStoreModal(s, () => loadAdminStores()))); tr.append(etd);
+      
+      // Delete
+      const dtd = mk('td');
+      const delBtn = mkBtn('🗑️','bsm',async() => {
+        if(!confirm('למחוק לצמיתות את '+(s.name_he||s.id)+'?\n⚠️ זה ימחק גם את כל המחירים הקשורים לחנות זו.')) return;
+        delBtn.disabled = true;
+        const { error } = await sb.from('stores').delete().eq('id', s.id);
+        if(error) { toast('שגיאה: ' + error.message, true); delBtn.disabled = false; return; }
+        tr.remove(); toast('החנות נמחקה');
+      });
+      delBtn.style.cssText = 'background:var(--red);color:#fff;border:none;border-radius:4px;padding:3px 7px;cursor:pointer';
+      dtd.append(delBtn); tr.append(dtd);
+
+      [s.name_he||'', s.name_en||'', s.url||'', s.active?'✓':'✗']
+      .forEach(v => { const td = mk('td'); td.textContent = v; tr.append(td); });
+      tbody.append(tr);
+    });
+  };
+
+  loadAdminStores();
+  table.append(tbody); wrap.append(table); return wrap;
+}
+
+function openAddStoreModal(onSaved){
+  const d = mk('div');
+  const urlInp = mkInp('url', 'הדבק קישור לדף הבית של החנות');
+  const previewArea = mk('div'); previewArea.style.marginTop = '15px';
+
+  const scrapeBtn = mkBtn('🔍 שאב פרטי חנות','bp bsm', async() => {
+    const url = urlInp.value.trim();
+    if(!url || !url.startsWith('http')){ toast('הזן כתובת אתר תקינה', true); return; }
+    scrapeBtn.disabled = true; scrapeBtn.textContent = '⏳ שואב...';
+    try {
+      const { data, error } = await sb.functions.invoke('scrape-product', { body: { url }, headers: { Authorization: `Bearer ${SUPABASE_ANON}` } });
+      if(error || !data) throw new Error(error?.message || 'לא התקבלו נתונים');
+      const pd = data.data || data;
+      
+      previewArea.innerHTML = '';
+      const pbox = mk('div'); pbox.style.cssText = 'padding:15px; background:var(--s2); border-radius:var(--rs); border:1px solid var(--brd)';
+      const pHeader = mk('div'); pHeader.style.cssText = 'display:flex; gap:12px; align-items:center; margin-bottom:12px';
+      
+      const logoUrl = pd.store_logo_url || `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=128`;
+      const img = mk('img'); img.src = logoUrl; img.style.cssText = 'width:48px;height:48px;object-fit:contain;background:#fff;border-radius:4px;border:1px solid var(--brd)';
+      
+      const nameInp = mkInp('text', 'שם החנות (עברית)', pd.store_name || '');
+      const nameEnInp = mkInp('text', 'שם החנות (אנגלית)', '');
+      
+      pHeader.append(img);
+      const inputs = mk('div'); inputs.style.flex = '1';
+      inputs.append(mkFld('שם בעברית', [nameInp]), mkFld('שם באנגלית', [nameEnInp]));
+      pHeader.append(inputs);
+      pbox.append(pHeader);
+      
+      const saveBtn = mkBtn('✅ אמת ושמור חנות','bp bfw', async() => {
+        const sName = nameInp.value.trim();
+        const sNameEn = nameEnInp.value.trim() || sName;
+        if(!sName){ toast('חובה להזין שם חנות', true); return; }
+        
+        const cleanUrl = new URL(url).hostname.replace('www.', '').toLowerCase();
+        const derivedId = cleanUrl.replace(/[^a-z0-9]/g, '');
+        saveBtn.disabled = true;
+        const { error: se } = await sb.from('stores').upsert({
+          id: derivedId,
+          name_he: sName,
+          name_en: sNameEn,
+          url: new URL(url).origin,
+          logo_url: logoUrl,
+          active: true
+        });
+        if(se){ toast(se.message, true); saveBtn.disabled = false; return; }
+        toast('חנות נוספה בהצלחה! 🎉'); closeModal(); if(onSaved) onSaved();
+      });
+      pbox.append(saveBtn);
+      previewArea.append(pbox);
+    } catch(e) {
+      toast('שגיאה בשאיבת הפרטים: ' + e.message, true);
+    } finally {
+      scrapeBtn.disabled = false; scrapeBtn.textContent = '🔍 שאב פרטי חנות';
+    }
+  });
+
+  d.append(mkFld('כתובת אתר החנות', [urlInp]), scrapeBtn, previewArea);
+  openModal('➕ הוספת חנות חדשה', d);
+}
+
+function openEditStoreModal(s, onSaved){
+  const d = mk('div');
+  const nameHe = mkInp('text', '', s.name_he || '');
+  const nameEn = mkInp('text', '', s.name_en || '');
+  const urlInp = mkInp('url', '', s.url || '');
+  const logoInp = mkInp('url', '', s.logo_url || '');
+  
+  const img = mk('img'); img.style.cssText = 'width:60px;height:60px;object-fit:contain;margin-bottom:10px;display:block;border:1px solid var(--brd);border-radius:4px;background:#fff';
+  img.src = s.logo_url || '';
+  img.onerror = () => img.style.display = 'none';
+  logoInp.oninput = () => { img.src = logoInp.value; img.style.display = 'block'; };
+
+  const r = mk('div'); r.style.cssText = 'display:flex; gap:8px; justify-content:flex-end; margin-top:16px';
+  r.append(mkBtn('ביטול','bs bsm', closeModal));
+  r.append(mkBtn('💾 שמור שינויים','bp bsm', async() => {
+    const { error } = await sb.from('stores').update({
+      name_he: nameHe.value.trim(),
+      name_en: nameEn.value.trim(),
+      url: urlInp.value.trim(),
+      logo_url: logoInp.value.trim(),
+      active: true
+    }).eq('id', s.id);
+    if(error){ toast(error.message, true); return; }
+    toast('השינויים נשמרו ✅'); closeModal(); if(onSaved) onSaved();
+  }));
+
+  d.append(img, mkFld('שם בעברית', [nameHe]), mkFld('שם באנגלית', [nameEn]), mkFld('כתובת אתר', [urlInp]), mkFld('קישור ללוגו', [logoInp]), r);
+  openModal('✏️ עריכת חנות', d);
+}
+
+async function buildAdminModels(){
+  const wrap=mk('div');
+  const actionsWrap = mk('div'); actionsWrap.style.cssText = 'display:flex; justify-content:space-between; align-items:center; margin-bottom:12px';
+  const addBtn=mkBtn('+ הוסף דגם','bp bsm',()=>openAddModelModal());
+  
+  const filterLbl = mk('label'); filterLbl.style.cssText = 'display:flex; align-items:center; gap:6px; font-size:12px; font-weight:bold; cursor:pointer';
+  const filterChk = mk('input'); filterChk.type = 'checkbox';
+  filterLbl.append(filterChk, tx('📦 הצג רק חסרי תמונה'));
+  actionsWrap.append(addBtn, filterLbl);
+  wrap.append(actionsWrap);
+
+  const {data:models}=await sb.from('product_models').select('*,brands(name),categories(name_he,icon)').order('category_id').order('brand_id');
+  const table=mk('table','admin-table');
+  const thead=mk('thead'); const hr=mk('tr');
+  ['תמונה','','','קטגוריה','מותג','דגם','מחיר','קרין','פעיל'].forEach(h=>{ const th=mk('th'); th.textContent=h; hr.append(th); });
+  thead.append(hr); table.append(thead);
+  const tbody=mk('tbody');
+  
+  const reloadModels = async () => {
+    tbody.innerHTML = '';
+    const {data:fresh} = await sb.from('product_models').select('*,brands(name),categories(name_he,icon)').order('category_id').order('brand_id');
+    let toRender = fresh || [];
+    if(filterChk.checked) toRender = toRender.filter(m => !m.image_url);
+    toRender.forEach(renderModelRow);
+  };
+  filterChk.onchange = reloadModels;
+  const renderModelRow = (m) => {
+    const tr=mk('tr');
+    // Thumbnail
+    const imgTd=mk('td');
+    if(m.image_url){
+      const thumb=mk('img'); thumb.src=m.image_url;
+      thumb.style.cssText='width:42px;height:42px;object-fit:cover;border-radius:6px;border:1px solid var(--brd);display:block';
+      thumb.onerror=()=>{ thumb.style.display='none'; }
+      imgTd.append(thumb);
+    } else {
+      const ph=mk('div'); ph.style.cssText='width:42px;height:42px;border-radius:6px;background:var(--s2);border:1px dashed var(--brd);display:flex;align-items:center;justify-content:center;font-size:18px';
+      ph.textContent='📦'; imgTd.append(ph);
+    }
+    tr.append(imgTd);
+    // Edit button
+    const etd=mk('td'); etd.append(mkBtn('✏️','bg bsm',()=>openEditModelModal(m, ()=>reloadModels()))); tr.append(etd);
+    // Delete button
+    const dtd=mk('td');
+    const delBtn=mkBtn('🗑️','bsm',async()=>{
+      if(!confirm('למחוק לצמיתות את '+m.model_name+'?\n⚠️ פעולה זו בלתי הפיכה!')) return;
+      delBtn.disabled=true; delBtn.textContent='...';
+      const {error}=await sb.from('product_models').delete().eq('id',m.id);
+      if(error){ toast('שגיאה: '+error.message,true); delBtn.disabled=false; delBtn.textContent='🗑️'; return; }
+      tr.remove(); toast('נמחק: '+m.model_name);
+      const idx=S.models.findIndex(x=>x.id===m.id); if(idx>-1) S.models.splice(idx,1);
+    });
+    delBtn.style.cssText='background:var(--red);color:#fff;border:none;border-radius:4px;padding:3px 7px;cursor:pointer';
+    dtd.append(delBtn); tr.append(dtd);
+    [(m.categories?.icon||'')+' '+(m.categories?.name_he||m.category_id), m.brands?.name||'', m.model_name,
+     m.price_range_low?'₪'+m.price_range_low+'–'+m.price_range_high:'—', m.is_karin_pick?'⭐':'', m.active?'✓':'✗']
+    .forEach(v=>{ const td=mk('td'); td.textContent=v; tr.append(td); });
+    tbody.append(tr);
+  };
+  
+  let initialRender = models || [];
+  if(filterChk.checked) initialRender = initialRender.filter(m => !m.image_url);
+  initialRender.forEach(renderModelRow);
+
+  table.append(tbody); wrap.append(table); return wrap;
+}
+
+async function buildAdminUsers(){
+  const wrap=mk('div');
+  const {data:users}=await sb.from('profiles').select('*').order('created_at',{ascending:false});
+  const table=mk('table','admin-table');
+  const thead=mk('thead'); const hr=mk('tr');
+  ['שם משתמש','Admin','תאריך יצירה'].forEach(h=>{ const th=mk('th'); th.textContent=h; hr.append(th); });
+  thead.append(hr); table.append(thead);
+  const tbody=mk('tbody');
+  (users||[]).forEach(u=>{
+    const tr=mk('tr');
+    [u.username||'', u.is_admin?'✓':'', new Date(u.created_at).toLocaleDateString('he-IL')]
+    .forEach(v=>{ const td=mk('td'); td.textContent=v; tr.append(td); });
+    tbody.append(tr);
+  });
+  table.append(tbody); wrap.append(table); return wrap;
+}
+
+function openAddModelModal(){
+  const d=mk('div');
+  const catSel=mkSel(CATS.map(c=>[c.id,c.icon+' '+c.he]),'stroller');
+  const brandInp=mkInp('text','');
+  const modelInp=mkInp('text','');
+
+  const imgUrlInp=mkInp('url','קישור לתמונה (http...)');
+
+  // Image preview
+  const imgPreview=mk('img'); imgPreview.style.cssText='display:none;width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--brd);margin-bottom:10px';
+  imgPreview.onerror=()=>imgPreview.style.display='none';
+  imgUrlInp.oninput=()=>{ if(imgUrlInp.value.startsWith('http')){ imgPreview.src=imgUrlInp.value; imgPreview.style.display='block'; } else imgPreview.style.display='none'; };
+
+  // Official URL + Fetch button
+  const prodUrlInp=mkInp('url','קישור לאתר הרשמי (http...) — ישאב תמונה ותיאור אוטומטית');
+  const fetchBtn=mkBtn('🔍 שאב מידע','bp bsm',async()=>{
+    const url=prodUrlInp.value.trim();
+    if(!url.startsWith('http')){ toast('הזן קישור תקין תחילה',true); return; }
+    fetchBtn.disabled=true; fetchBtn.textContent='⏳ שואב...';
+    try{
+      const {data,error}=await sb.functions.invoke('scrape-product',{body:{url},headers:{Authorization:`Bearer ${SUPABASE_ANON}`}});
+      if(error||!data) throw new Error(error?.message||'אין נתונים');
+      const pd = data.data || data;
+      const pdImg = pd.image_url || pd.image;
+      if(pdImg){ imgUrlInp.value=pdImg; imgPreview.src=pdImg; imgPreview.style.display='block'; }
+      const pdTitle = pd.name || pd.title;
+      if(pdTitle && !modelInp.value) modelInp.value=pdTitle.substring(0,80);
+      toast('✅ נשאב בהצלחה!');
+    } catch(e){ toast('⚠️ לא הצלחנו לשאוב: '+e.message,true); }
+    finally{ fetchBtn.disabled=false; fetchBtn.textContent='🔍 שאב מידע'; }
+  });
+  const urlRow=mk('div'); urlRow.style.cssText='display:flex;gap:8px;align-items:center;margin-bottom:10px';
+  urlRow.append(prodUrlInp,fetchBtn);
+
+  const pLow=mkInp('number',''); const pHigh=mkInp('number','');
+  const karinChk=mk('input'); karinChk.type='checkbox';
+  const karinNote=mkInp('text','הערת קרין (אופציונלי)');
+  const kl=mk('label'); kl.style.cssText='font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:10px';
+  kl.append(karinChk,tx('⭐ המלצת קרין'));
+  const pr=mk('div','r2'); pr.append(mkFld('מחיר מינימום (₪)',[pLow]),mkFld('מחיר מקסימום (₪)',[pHigh]));
+  const r=mk('div'); r.style.cssText='display:flex;gap:8px;justify-content:flex-end;margin-top:12px';
+  r.append(mkBtn('ביטול','bs bsm',closeModal));
+  r.append(mkBtn('💾 שמור','bp bsm',async()=>{
+    if(!brandInp.value.trim()||!modelInp.value.trim()){ toast('שם מותג ודגם הם שדות חובה',true); return; }
+    let {data:brand}=await sb.from('brands').select('id').eq('name',brandInp.value.trim()).single();
+    if(!brand){ const {data:nb}=await sb.from('brands').insert({name:brandInp.value.trim()}).select().single(); brand=nb; }
+    const {error}=await sb.from('product_models').insert({
+        category_id:catSel.value,brand_id:brand.id,model_name:modelInp.value.trim(),
+        image_url:imgUrlInp.value.trim()||null, product_url:prodUrlInp.value.trim()||null,
+        price_range_low:Number(pLow.value)||null,price_range_high:Number(pHigh.value)||null,
+        is_karin_pick:karinChk.checked,karin_note:karinNote.value.trim()||null
+    });
+    if(error){ toast(error.message,true); return; }
+    toast('נשמר! 🎉'); closeModal();
+    const {data:models}=await sb.from('product_models').select('*, brands(name)').eq('active',true).order('is_karin_pick',{ascending:false});
+    S.models=models||[];
+  }));
+  d.append(
+    mkFld('קטגוריה',[catSel]),
+    mkFld('מותג',[brandInp]),
+    mkFld('שם דגם',[modelInp]),
+    mk('div') /* spacer — url row appended below */,
+    mkFld('קישור רשמי + שאיבת מידע',[]),
+    urlRow, imgPreview,
+    mkFld('קישור לתמונה',[imgUrlInp]),
+    pr, kl, mkFld('הערת קרין',[karinNote]), r
+  );
+  openModal('➕ הוספת דגם חדש',d);
+}
+
+function openEditModelModal(m, onSaved){
+  const d=mk('div');
+
+  // ── Image preview at top ──────────────────────────────────────
+  const headerWrap=mk('div'); headerWrap.style.cssText='display:flex;gap:14px;margin-bottom:16px;padding:14px;background:var(--s2);border-radius:var(--r);border:1px solid var(--brd)';
+  const imgPreview=mk('img'); imgPreview.style.cssText='width:90px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--brd);flex-shrink:0';
+  imgPreview.onerror=()=>{ imgPreview.src=''; imgPreview.style.display='none'; };
+  if(m.image_url){ imgPreview.src=m.image_url; } else { imgPreview.style.display='none'; }
+  const headerInfo=mk('div'); headerInfo.style.flex='1';
+  const hName=mk('div'); hName.style.cssText='font-size:14px;font-weight:700;margin-bottom:4px'; hName.textContent=(m.brands?.name||'')+' '+m.model_name;
+  const hCat=mk('div'); hCat.style.cssText='font-size:12px;color:var(--t2)'; hCat.textContent=(m.categories?.icon||'')+ ' ' +(m.categories?.name_he||m.category_id||'');
+  headerInfo.append(hName,hCat); headerWrap.append(imgPreview,headerInfo); d.append(headerWrap);
+
+  // ── Official URL + Scrape button ──────────────────────────────
+  const prodUrlInp=mkInp('url','קישור לאתר הרשמי (http...)', m.product_url||'');
+  const fetchBtn=mkBtn('🔍 שאב מידע','bp bsm',async()=>{
+    const url=prodUrlInp.value.trim();
+    if(!url.startsWith('http')){ toast('הזן קישור תקין תחילה',true); return; }
+    fetchBtn.disabled=true; fetchBtn.textContent='⏳ שואב...';
+    try{
+      const {data,error}=await sb.functions.invoke('scrape-product',{body:{url},headers:{Authorization:`Bearer ${SUPABASE_ANON}`}});
+      if(error||!data) throw new Error(error?.message||'אין נתונים');
+      const pd = data.data || data;
+      const pdImg = pd.image_url || pd.image;
+      if(pdImg){
+        let img=pdImg; if(img.startsWith('/')) try{ img=new URL(url).origin+img; } catch(e){}
+        imgUrlInp.value=img; imgPreview.src=img; imgPreview.style.display='block';
+      }
+      toast('✅ נשאב בהצלחה!');
+    } catch(e){ toast('⚠️ לא הצלחנו לשאוב: '+e.message,true); }
+    finally{ fetchBtn.disabled=false; fetchBtn.textContent='🔍 שאב מידע'; }
+  });
+  const urlRow=mk('div'); urlRow.style.cssText='display:flex;gap:8px;align-items:center;margin-bottom:10px';
+  urlRow.append(prodUrlInp,fetchBtn);
+
+  // ── Form fields ───────────────────────────────────────────────
+  const nameInp=mkInp('text','',m.model_name||'');
+
+  // Image URL — syncs with preview
+  const imgUrlInp=mkInp('url','קישור לתמונה (http...)',m.image_url||'');
+  imgUrlInp.oninput=()=>{ if(imgUrlInp.value.startsWith('http')){ imgPreview.src=imgUrlInp.value; imgPreview.style.display='block'; } };
+
+  const pLow=mkInp('number','',m.price_range_low||''); const pHigh=mkInp('number','',m.price_range_high||'');
+  const pr=mk('div','r2'); pr.append(mkFld('מחיר מינימום (₪)',[pLow]),mkFld('מחיר מקסימום (₪)',[pHigh]));
+
+  const karinChk=mk('input'); karinChk.type='checkbox'; karinChk.checked=!!m.is_karin_pick;
+  const activeChk=mk('input'); activeChk.type='checkbox'; activeChk.checked=m.active!==false;
+  const karinNote=mkInp('text','',m.karin_note||'');
+  const chkRow=mk('div'); chkRow.style.cssText='display:flex;gap:18px;margin-bottom:10px';
+  const kl=mk('label'); kl.style.cssText='font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer'; kl.append(karinChk,tx('⭐ המלצת קרין'));
+  const al=mk('label'); al.style.cssText='font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer'; al.append(activeChk,tx('✅ פעיל'));
+  chkRow.append(kl,al);
+
+  const r=mk('div'); r.style.cssText='display:flex;gap:8px;justify-content:flex-end;margin-top:12px';
+  r.append(mkBtn('ביטול','bs bsm',closeModal));
+  r.append(mkBtn('💾 שמור שינויים','bp bsm',async()=>{
+    const {error}=await sb.from('product_models').update({
+        model_name:nameInp.value.trim(),
+        image_url:imgUrlInp.value.trim()||null, product_url:prodUrlInp.value.trim()||null,
+        price_range_low:Number(pLow.value)||null, price_range_high:Number(pHigh.value)||null,
+        is_karin_pick:karinChk.checked, karin_note:karinNote.value.trim()||null,
+        active:activeChk.checked, updated_at:new Date().toISOString()
+    }).eq('id',m.id);
+    if(error){ toast(error.message,true); return; }
+    toast('עודכן! ✅'); closeModal();
+    const {data:models}=await sb.from('product_models').select('*, brands(name)').eq('active',true).order('is_karin_pick',{ascending:false});
+    S.models=models||[];
+    if(onSaved) onSaved();
+  }));
+
+  d.append(
+    mkFld('שם דגם',[nameInp]),
+    mkFld('קישור רשמי + שאיבת מידע',[]),
+    urlRow,
+    mkFld('קישור לתמונה',[imgUrlInp]),
+    pr, chkRow, mkFld('הערת קרין',[karinNote]), r
+  );
+  openModal('✏️ עריכה: '+(m.brands?.name||'')+' '+m.model_name, d);
+}
+
+/* ═══════════════════════════════════════════════
+   הגדרות
+═══════════════════════════════════════════════ */
+function openSettings(){
+  const d=mk('div');
+  const wp=mkWeekPicker(S.profile?.preg_week,S.profile?.preg_days);
+  const r=mk('div'); r.style.cssText='display:flex;gap:8px;justify-content:flex-end;margin-top:12px';
+  r.append(mkBtn('ביטול','bs bsm',closeModal));
+  r.append(mkBtn('שמור','bp bsm',async()=>{
+    const w=wp.getW(), x=wp.getD();
+    if(!w||w<1||w>42){ toast('שבוע לא תקין',true); return; }
+    const updates={preg_week:w,preg_days:x,due_date:calcDue(w,x)};
+    await sb.from('profiles').update(updates).eq('id',S.user.id);
+    Object.assign(S.profile,updates); closeModal(); renderDash(); toast('נשמר!');
+  }));
+  d.innerHTML=''; const htitle=mk('div'); htitle.style.cssText='font-size:13px;font-weight:700;margin-bottom:10px'; htitle.textContent='🤰 שלב ההריון'; d.append(htitle,wp.node,r);
+  openModal('⚙️ הגדרות',d);
+}
+
+/* ═══════════════════════════════════════════════
+   אתחול
+═══════════════════════════════════════════════ */
+(async function boot(){
+  S.authMode='login';
+  const {data:{session}}=await sb.auth.getSession();
+  if(session){
+    S.user=session.user;
+    const {data:profile}=await sb.from('profiles').select('*').eq('id',session.user.id).single();
+    if(profile){ S.profile=profile; await afterLogin(); return; }
+  }
+  renderAuth();
+}());
+</script>
+</body>
+</html>
