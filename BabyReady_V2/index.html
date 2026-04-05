@@ -277,16 +277,51 @@ textarea{resize:vertical;min-height:72px;line-height:1.5}
  .ci-name{font-size:14px;font-weight:700}
  .ci-cat{font-size:11px;color:var(--t2)}
  
- .ci-controls{display:grid;grid-template-columns:1fr 1fr;gap:12px;background:var(--s2);padding:12px;border-radius:var(--rs)}
- .ci-price-box{text-align:left;display:flex;flex-direction:column;justify-content:center}
- .ci-final-price{font-size:18px;font-weight:800;color:var(--grn)}
- .ci-savings{font-size:11px;color:var(--t2);margin-top:2px}
- 
- .club-selector{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
- .club-pill{padding:4px 10px;border-radius:15px;background:var(--surf);border:1px solid var(--brd);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
- .club-pill.on{background:var(--grn);color:#fff;border-color:var(--grn)}
- 
- .eilat-toggle{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--tx)}
+  .ci-controls{display:flex;align-items:center;justify-content:space-between;gap:15px;background:var(--s2);padding:12px 18px;border-radius:var(--rs);flex-wrap:nowrap;margin-top:10px}
+  .ci-store-wrap{flex:0 0 160px;min-width:160px}
+  .ci-opts-wrap{flex:1;display:flex;align-items:center;gap:12px;justify-content:center}
+  .ci-price-box{flex:0 0 110px;text-align:left;display:flex;flex-direction:column;align-items:flex-end;min-width:110px}
+  .ci-final-price{font-size:22px;font-weight:800;color:var(--grn);white-space:nowrap}
+  .ci-savings{font-size:10px;color:var(--t2);margin-top:2px;white-space:nowrap}
+  
+  /* Professional Gantt Chart - Fixed RTL */
+  .gantt-root{display:flex;background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);height:500px}
+  .gantt-side{width:340px;flex-shrink:0;background:var(--s1);border-right:1.5px solid var(--brd);display:flex;flex-direction:column;z-index:10;box-shadow:-4px 0 10px rgba(0,0,0,0.05)}
+  .gantt-main{flex:1;overflow-x:auto;position:relative;background:#fdfdfd;display:flex;flex-direction:column}
+  
+  .gantt-row{display:flex;height:95px;border-bottom:1px solid var(--brd);align-items:center;transition:background 0.2s}
+  .gantt-row.is-purchased{background:#e8f5e9 !important}
+  .gantt-h-row{height:45px;background:var(--s2);border-bottom:2px solid var(--brd);position:sticky;top:0;z-index:5}
+  
+  /* Sidebar Cells */
+  .gs-cell{padding:10px 14px;display:flex;flex-direction:column;gap:6px;width:100%;height:100%;justify-content:center}
+  .gs-info{display:flex;align-items:baseline;gap:8px;margin-bottom:2px}
+  .gs-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+  .gs-sub{font-size:10px;color:var(--t3);font-weight:600}
+  .gs-ctrls{display:flex;align-items:center;gap:8px}
+  .gs-date-inp{flex:1;padding:4px 8px;border-radius:8px;border:1.5px solid var(--brd);font-size:11px;background:var(--surf);font-family:inherit}
+  .gs-del{color:var(--red);opacity:0.6;cursor:pointer;font-size:14px;transition:0.2s}
+  .gs-del:hover{opacity:1;transform:scale(1.2)}
+  
+  /* Timeline Area */
+  .gt-cell{position:relative;height:100%;flex:1;min-width:100px;border-right:1px dashed #eee;display:flex;align-items:center}
+  .gt-month-lbl{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:11px;font-weight:800;color:var(--t2);text-transform:uppercase;white-space:nowrap}
+  
+  /* The Bars - RTL FIXED */
+  .gb-wrap{position:absolute;height:30px;left:0;right:0;display:flex;align-items:center}
+  .gb-bar{position:absolute;height:26px;border-radius:13px;background:var(--grn);box-shadow:0 2px 5px rgba(0,0,0,0.1);display:flex;align-items:center;padding:0 12px;color:#fff;font-size:10px;font-weight:800;z-index:2;white-space:nowrap;overflow:visible}
+  .gb-bar.pending{background:repeating-linear-gradient(45deg, #a8e063, #a8e063 10px, #addd65 10px, #addd65 20px);opacity:0.9;color:#3e4a2b}
+  .gb-due-line{position:absolute;width:2px;height:100%;background:rgba(255,0,0,0.3);border-right:1.5px dashed var(--red);z-index:1;pointer-events:none}
+  .gb-today-line{position:absolute;width:2px;height:100%;background:rgba(0,100,255,0.15);border-right:1.5px solid #2d9cdb;z-index:3;pointer-events:none}
+  
+  .club-selector{display:flex;gap:6px;align-items:center}
+  .club-pill{padding:5px 12px;border-radius:20px;background:var(--surf);border:1.5px solid var(--brd);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;user-select:none}
+  .club-pill.on{background:var(--grn);color:#fff;border-color:var(--grn)}
+  .club-pill:hover{border-color:var(--brd2)}
+  
+  .eilat-btn{padding:5px 14px;border-radius:20px;border:1.5px solid var(--brd);background:var(--surf);font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:5px;box-shadow:var(--shadow);user-select:none}
+  .eilat-btn.on{background:#fff8e6;border-color:#f2c94c;color:#9e7d0a}
+  .eilat-btn i{font-style:normal;font-size:13px}
  
   .eval-summary-card{background:var(--gl);border:2px solid var(--grn);border-radius:var(--r);padding:16px;margin-bottom:16px;box-shadow:var(--shadow2);animation:fi .3s ease}
   .eval-summary-title{font-size:11px;font-weight:700;color:var(--gd);text-transform:uppercase;margin-bottom:10px}
@@ -844,8 +879,7 @@ function renderDash(){
   const sitems=[
     {v:'products', l:'מוצרים', ico:'📋'},
     {v:'evaluation', l:'מחשבון עלויות', ico:'💰'},
-    {v:'gantt',    l:'ציר זמן', ico:'📅'},
-    {v:'delivery', l:'משלוחים', ico:'🚚'}
+    {v:'delivery', l:'זמני משלוח', ico:'🚚'}
   ];
   
   sitems.forEach(itm=>{
@@ -933,7 +967,6 @@ function renderMain(){
     main.classList.add('wide');
     main.append(buildEvaluationTab());
   }
-  else if(S.dashTab==='gantt') main.append(buildGantt());
   else if(S.dashTab==='delivery') main.append(buildDelivery());
   else if(S.dashTab==='admin'&&S.isAdmin) main.append(buildAdmin());
 }
@@ -1237,15 +1270,12 @@ function buildModelRow(item){
   }
 
   const foot=mk('div','rfoot');
-  const chk=mk('input'); chk.type='checkbox'; chk.checked=!!item.purchased;
-  chk.onchange=async()=>{
-    await sb.from('user_items').update({purchased:chk.checked,purchased_at:chk.checked?new Date().toISOString():null}).eq('id',item.id);
-    item.purchased=chk.checked; swapRow(item); renderMain();
-  };
-  const cl=mk('label','chk-lbl'); cl.append(chk,tx(item.purchased?'נקנה ✓':'סמן כנקנה')); 
-  foot.append(cl);
+  foot.style.justifyContent = 'flex-end';
+  const info = mk('div'); info.style.fontSize = '10px'; info.style.color = 'var(--t3)';
+  info.textContent = item.is_ordered ? 'בטיפול - 🚚 לצפייה במשלוח' : (item.purchased ? '✓ פריט זה נקנה' : '');
+  foot.append(info);
   body.append(foot);
-
+  
   row.append(body);
   return row;
 }
@@ -1789,69 +1819,153 @@ function openAddItemModal(preselectedCat = null){
 /* ═══════════════════════════════════════════════
    ציר זמן ומשלוחים
 ═══════════════════════════════════════════════ */
-function buildGantt(){
-  if(!S.profile?.due_date){ const e=mk('div','sub'); e.textContent='לא הוגדר תאריך לידה — עדכן בהגדרות'; return e; }
-  const due=new Date(S.profile.due_date);
-  const now=new Date(); now.setDate(1);
-  const end=new Date(due); end.setMonth(end.getMonth()+2);
-  const total=(end-now)/86400000;
-  const pct=d=>Math.max(0,Math.min(97,(d-now)/86400000/total*100));
-  const months=[]; for(let d=new Date(now);d<=end;d.setMonth(d.getMonth()+1)) months.push(new Date(d));
-
-  const wrap=mk('div'); wrap.style.cssText='background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);padding:18px;overflow-x:auto;box-shadow:var(--shadow)';
-  const gh=mk('h3'); gh.style.marginBottom='14px'; gh.textContent='📅 ציר זמן רכישות'; wrap.append(gh);
-  const mr=mk('div'); mr.style.cssText='display:flex;min-width:520px;margin-bottom:4px';
-  const sp=mk('div'); sp.style.cssText='width:185px;flex-shrink:0'; mr.append(sp);
-  const mlr=mk('div'); mlr.style.cssText='flex:1;display:flex';
-  months.forEach(m=>{ const gm=mk('div'); gm.style.cssText='flex:1;font-size:9px;color:var(--t3);font-weight:700;text-align:center;text-transform:uppercase'; gm.textContent=m.toLocaleDateString('he-IL',{month:'short',year:'2-digit'}); mlr.append(gm); });
-  mr.append(mlr); wrap.append(mr);
-
-  S.items.filter(p=>p._cat?.u!=='low').forEach(p=>{
-    const ob=new Date(due); ob.setDate(ob.getDate()-(6*7+14));
-    const lp=pct(ob), wp=Math.max(2,pct(due)-pct(ob));
-    const row=mk('div'); row.style.cssText='display:flex;align-items:center;margin-bottom:5px;min-width:520px';
-    const lbl=mk('div'); lbl.style.cssText='width:185px;font-size:11px;font-weight:500;flex-shrink:0;padding-left:10px;line-height:1.3;text-align:right'+(p.purchased?';text-decoration:line-through;color:var(--t3)':'');
-    const cat=p._cat||{};const model=p.product_models;
-    lbl.textContent=(cat.icon||'')+' '+(model?((model.brands?.name||'')+' '+model.model_name).slice(0,20):cat.he||'');
-    const trk=mk('div'); trk.style.cssText='flex:1;height:22px;border-radius:6px;position:relative;background:var(--s2);border:1px solid var(--brd)';
-    const bar=mk('div'); bar.style.cssText='position:absolute;top:2px;height:18px;border-radius:5px;display:flex;align-items:center;padding:0 6px;font-size:9px;font-weight:700;white-space:nowrap;overflow:hidden;color:'+(cat.u==='medium'?'var(--tx)':'#fff')+';left:'+lp+'%;width:'+wp+'%';
-    bar.style.background=p.purchased?'#b8b4ae':({critical:'var(--red)',high:'var(--org)',medium:'var(--ylw)',low:'var(--grn)'}[cat.u]||'#888');
-    bar.textContent=p.purchased?'✓':new Date(ob).toLocaleDateString('he-IL',{month:'short',day:'numeric'});
-    trk.append(bar); row.append(trk,lbl); wrap.append(row);
-  });
-  return wrap;
-}
 
 function buildDelivery(){
-  if(!S.profile?.due_date){ const e=mk('div','sub'); e.textContent='לא הוגדר תאריך לידה'; return e; }
-  const due=new Date(S.profile.due_date);
-  const frag=document.createDocumentFragment();
-  const dh=mk('h3'); dh.style.marginBottom='12px'; dh.textContent='🚚 לוח משלוחים'; frag.append(dh);
-  const list=mk('div'); list.style.cssText='display:flex;flex-direction:column;gap:8px';
-  const sorted=S.items.filter(p=>!p.purchased&&p._cat?.u!=='low').map(p=>{
-    const ob=new Date(due); ob.setDate(ob.getDate()-(6*7+14));
-    return{...p,ob,days:Math.round((ob-new Date())/86400000)};
-  }).sort((a,b)=>a.ob-b.ob);
-  if(!sorted.length){
-    const e=mk('div','empty'); const ei=mk('div','ei'); ei.textContent='🎉';
-    const ep=mk('p'); ep.textContent='כל הפריטים הוזמנו!'; e.append(ei,ep); list.append(e);
+  if(!S.profile?.due_date){ const e=mk('div','sub'); e.textContent='לא הוגדר תאריך לידה — עדכן בהגדרות'; return e; }
+  const due = new Date(S.profile.due_date);
+  const now = new Date();
+  
+  const startDate = new Date(due); startDate.setMonth(startDate.getMonth() - 5); startDate.setDate(1);
+  const endDate = new Date(due); endDate.setMonth(endDate.getMonth() + 2);
+  const totalDays = (endDate - startDate) / 86400000;
+  
+  const getPct = d => ((new Date(d) - startDate) / 86400000) / totalDays * 100;
+  
+  const frag = document.createDocumentFragment();
+  const dh = mk('div'); dh.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:16px';
+  dh.innerHTML = `<h3 style="margin:0">🚚 זמני משלוח</h3>`;
+  frag.append(dh);
+  
+  const items = S.items.filter(p => (p.is_ordered || p.purchased));
+  if(!items.length) {
+    const e = mk('div','empty'); e.innerHTML='<div style="font-size:48px">📦</div><p>אין משלוחים פעילים. העבירו פריטים מהסל (מחשבון עלויות) לכאן!</p>';
+    frag.append(e); return frag;
   }
-  sorted.forEach(p=>{
-    const item=mk('div'); item.style.cssText='background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow)';
-    const cat=p._cat||{}; const model=p.product_models;
-    const dot=mk('div'); const clr={critical:'var(--red)',high:'var(--org)',medium:'var(--ylw)',low:'var(--grn)'}; dot.style.cssText='width:9px;height:9px;border-radius:50%;flex-shrink:0;background:'+(clr[cat.u]||'#888');
-    const ico=mk('span'); ico.style.cssText='font-size:20px;flex-shrink:0'; ico.textContent=cat.icon||'📦';
-    const info=mk('div'); info.style.flex='1';
-    const dn=mk('div'); dn.style.cssText='font-size:13px;font-weight:600'; dn.textContent=model?((model.brands?.name||'')+' '+model.model_name):cat.he||'';
-    info.append(dn); if(cat.u) info.append(urgBadge(cat.u));
-    const dates=mk('div'); dates.style.cssText='text-align:left;flex-shrink:0';
-    const col=p.days<0?'var(--red)':p.days<14?'var(--org)':'var(--grn)';
-    const dd=mk('div'); dd.style.cssText='font-size:15px;font-weight:800;color:'+col; dd.textContent=new Date(p.ob).toLocaleDateString('he-IL',{month:'short',day:'numeric'}); dates.append(dd);
-    if(p.days<0){ const ds=mk('div'); ds.style.cssText='font-size:10px;color:var(--red);font-weight:600'; ds.textContent='באיחור! '+Math.abs(p.days)+' ימים'; dates.append(ds); }
-    else if(p.days<14){ const ds=mk('div'); ds.style.cssText='font-size:10px;color:var(--org);font-weight:600'; ds.textContent='עוד '+p.days+' ימים'; dates.append(ds); }
-    item.append(dates,ico,info,dot); list.append(item);
+
+  const root = mk('div', 'gantt-root');
+  const side = mk('div', 'gantt-side');
+  const sh = mk('div', 'gantt-row gantt-h-row');
+  sh.innerHTML = `<div class="gs-cell" style="font-weight:800;font-size:11px;color:var(--t2)">פריטים וניהול הגעה</div>`;
+  side.append(sh);
+  
+  const main = mk('div', 'gantt-main');
+  const th = mk('div', 'gantt-row gantt-h-row');
+  th.style.width = (totalDays * 5) + 'px'; 
+  
+  for(let d = new Date(startDate); d <= endDate; d.setMonth(d.getMonth() + 1)) {
+    const mCell = mk('div', 'gt-cell');
+    mCell.innerHTML = `<div class="gt-month-lbl">${d.toLocaleDateString('he-IL',{month:'long',year:'2-digit'})}</div>`;
+    th.append(mCell);
+  }
+  main.append(th);
+  
+  items.sort((a,b) => new Date(a.created_at) - new Date(b.created_at)).forEach(p => {
+    const cat = getCat(p.category_id);
+    const evalInfo = S.evalCart.find(e => e.user_item_id === p.id);
+    const storeName = evalInfo ? (STORES[evalInfo.selected_store_id]?.name || evalInfo.selected_store_id) : 'הוזמן';
+    
+    // Sidebar Cell
+    const sRow = mk('div', 'gantt-row' + (p.purchased ? ' is-purchased' : ''));
+    const sCell = mk('div', 'gs-cell');
+    
+    const top = mk('div', 'gs-info');
+    const del = mk('div', 'gs-del'); del.innerHTML = '🗑️';
+    del.onclick = async () => {
+      if(!confirm('להסיר פריט זה מרשימת המשלוחים?')) return;
+      await sb.from('user_items').update({ is_ordered: false, purchased: false }).eq('id', p.id);
+      await loadItems(); renderDash();
+    };
+    const name = p.product_models ? (p.product_models.brands?.name + ' ' + p.product_models.model_name) : (p.custom_name || cat.he);
+    top.innerHTML = `<div class="gs-name" title="${name}">${cat.icon} ${name}</div>
+                      <div class="gs-sub">${storeName}</div>`;
+    top.prepend(del);
+    
+    const ctrls = mk('div', 'gs-ctrls');
+    
+    const ordGrp = mk('div'); ordGrp.style.cssText='display:flex;flex-direction:column;gap:1px;flex:1';
+    const ordLbl = mk('div'); ordLbl.textContent='תאריך הזמנה:'; ordLbl.style.fontSize='8px'; ordLbl.style.color='var(--t3)';
+    const ordInp = mk('input', 'gs-date-inp'); ordInp.type = 'date'; ordInp.value = p.ordered_at || '';
+    ordInp.onchange = async () => {
+      await sb.from('user_items').update({ ordered_at: ordInp.value }).eq('id', p.id);
+      p.ordered_at = ordInp.value; renderDash();
+    };
+    ordGrp.append(ordLbl, ordInp);
+
+    const devGrp = mk('div'); devGrp.style.cssText='display:flex;flex-direction:column;gap:1px;flex:1';
+    const devLbl = mk('div'); devLbl.textContent='צפי הגעה:'; devLbl.style.fontSize='8px'; devLbl.style.color='var(--t3)';
+    const devInp = mk('input', 'gs-date-inp'); devInp.type = 'date'; devInp.value = p.estimated_delivery_date || '';
+    devInp.onchange = async () => {
+      await sb.from('user_items').update({ estimated_delivery_date: devInp.value }).eq('id', p.id);
+      p.estimated_delivery_date = devInp.value; renderDash();
+    };
+    devGrp.append(devLbl, devInp);
+    
+    const recBtn = mkBtn('✓', 'bp bsm bico', async () => {
+      if(!confirm('האם הפריט התקבל?')) return;
+      await sb.from('user_items').update({ purchased: true, purchased_at: new Date().toISOString() }).eq('id', p.id);
+      p.purchased = true; renderDash();
+    });
+    
+    if(p.purchased) {
+      recBtn.innerHTML = '↺'; recBtn.title = 'בטל סימון כהתקבל'; recBtn.className = 'btn bg bsm bico';
+      recBtn.onclick = async () => {
+        if(!confirm('לבטל סימון כהתקבל?')) return;
+        await sb.from('user_items').update({ purchased: false, purchased_at: null }).eq('id', p.id);
+        p.purchased = false; renderDash();
+      };
+    } else {
+      recBtn.title = 'סמן כהתקבל';
+    }
+
+    ctrls.append(ordGrp, devGrp, recBtn);
+    sCell.append(top, ctrls);
+    sRow.append(sCell);
+    side.append(sRow);
+    
+    // Timeline Row
+    const tRow = mk('div', 'gantt-row' + (p.purchased ? ' is-purchased' : ''));
+    tRow.style.width = th.style.width;
+    const barArea = mk('div', 'gt-cell');
+    barArea.style.flex = '1'; barArea.style.border = 'none';
+    
+    if(p.purchased) {
+      const lbl = mk('div'); lbl.style.cssText='position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:16px;font-weight:900;color:rgba(76,175,80,0.25);letter-spacing:5px;pointer-events:none;white-space:nowrap';
+      lbl.textContent = 'התקבל • DELIVERED';
+      barArea.append(lbl);
+    }
+
+    const todayMarker = mk('div', 'gb-today-line'); todayMarker.style.right = getPct(now) + '%';
+    const dueMarker = mk('div', 'gb-due-line'); dueMarker.style.right = getPct(due) + '%';
+    barArea.append(todayMarker, dueMarker);
+
+    const orderDate = p.ordered_at ? new Date(p.ordered_at) : new Date(p.created_at);
+    const deliveryDate = p.estimated_delivery_date ? new Date(p.estimated_delivery_date) : null;
+    
+    const barRight = getPct(orderDate);
+    const barEnd = p.purchased ? getPct(new Date(p.purchased_at)) : (deliveryDate ? getPct(deliveryDate) : getPct(now));
+    const barWidth = Math.max(3, Math.abs(barEnd - barRight));
+    
+    if(!p.purchased) {
+      const bar = mk('div', 'gb-bar pending');
+      bar.style.right = Math.min(barRight, barEnd) + '%'; 
+      bar.style.width = barWidth + '%';
+    
+      if(deliveryDate) bar.innerHTML = `🚚 צפי: ${deliveryDate.toLocaleDateString('he-IL',{month:'numeric',day:'numeric'})}`;
+      else bar.innerHTML = `⏳ בדרך`;
+      barArea.append(bar);
+    }
+    tRow.append(barArea);
+    main.append(tRow);
   });
-  frag.append(list); return frag;
+  
+  root.append(main, side); 
+  frag.append(root);
+  
+  const helper = mk('div'); helper.style.cssText = 'margin-top:12px;font-size:11px;color:var(--t3);display:flex;gap:16px';
+  helper.innerHTML = `<span><b style="color:#2d9cdb">┃</b> היום</span> <span><b style="color:var(--red)">┃</b> תאריך לידה (יעד)</span> <span>💡 ערוך תאריכים משמאל</span>`;
+  frag.append(helper);
+
+  return frag;
 }
 
 /* ═══════════════════════════════════════════════
@@ -1976,34 +2090,33 @@ function buildEvaluationTab(){
       top.append(img, info, del);
       ci.append(top);
 
-      // Controls: Store, Club, Eilat
+      // Re-ordered 3-column Layout for cart items: [Store Selector] [Options] [Price Result]
       const controls = mk('div', 'ci-controls');
       
-      // Store Selector
-      const storeWrap = mk('div');
-      const sLabel = mk('label'); sLabel.style.cssText = 'display:block;font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px'; sLabel.textContent = 'חנות & מחיר בסיס';
-      const storeOpts = storePrices.map(p => [p.store_id, `${STORES[p.store_id]?.name || p.store_id} (₪${p.price})`]);
-      if(storeOpts.length === 0) {
-        storeOpts.push(['', 'אין מחירים זמינים למוצר זה']);
-      }
+      // Right Column: Store selection
+      const storeWrap = mk('div', 'ci-store-wrap');
+      const storeOpts = storePrices.map(p => [p.store_id, `${STORES[p.store_id]?.name || p.store_id} (₪${p.price.toLocaleString()})`]);
+      if(storeOpts.length === 0) storeOpts.push(['', 'אין מחירים']);
       const sSel = mkSel(storeOpts, evalItem.selected_store_id || (storePrices[0]?.store_id));
+      sSel.style.fontSize = '12px';
       sSel.onchange = async () => {
         await saveEvalItem(item.id, {selected_store_id: sSel.value});
         refreshCart();
       };
-      storeWrap.append(sLabel, sSel);
+      storeWrap.append(sSel);
       
-      // Clubs & Eilat
-      const optsWrap = mk('div');
+      // Middle Column: Eilat Toggle + Clubs
+      const optsWrap = mk('div', 'ci-opts-wrap');
       
-      const eWrap = mk('label', 'eilat-toggle');
-      const eChk = mk('input'); eChk.type = 'checkbox'; eChk.checked = !!evalItem.is_eilat;
-      eChk.onchange = async () => {
-        await saveEvalItem(item.id, {is_eilat: eChk.checked});
+      // Modern Eilat Button
+      const eBtn = mk('div', 'eilat-btn' + (evalItem.is_eilat ? ' on' : ''));
+      eBtn.innerHTML = `<i>🌵</i> <span>רכישה באילת</span>`;
+      eBtn.onclick = async () => {
+        await saveEvalItem(item.id, {is_eilat: !evalItem.is_eilat});
         refreshCart();
       };
-      eWrap.append(eChk, tx('רכישה באילת (ללא מע"מ)'));
-      
+      optsWrap.append(eBtn);
+
       const clubWrap = mk('div', 'club-selector');
       S.clubs.forEach(club => {
         const isOn = evalItem.applied_club_id === club.id;
@@ -2016,16 +2129,13 @@ function buildEvaluationTab(){
         };
         clubWrap.append(pill);
       });
+      optsWrap.append(clubWrap);
       
-      optsWrap.append(eWrap, clubWrap);
-      controls.append(storeWrap, optsWrap);
-      
-      // Resulting Price Calculation
+      // Price Box calculation
       const priceBox = mk('div', 'ci-price-box');
       const selectedStoreId = sSel.value;
       const basePriceObj = storePrices.find(p => p.store_id === selectedStoreId);
       let basePrice = basePriceObj ? basePriceObj.price : (item.custom_price || 0);
-      
       totalOriginal += basePrice;
 
       let finalPrice = basePrice;
@@ -2051,13 +2161,34 @@ function buildEvaluationTab(){
       pSave.textContent = discountText ? `חיסכון: ₪${Math.round(basePrice - finalPrice).toLocaleString()} (${discountText})` : 'מחיר מלא';
       
       priceBox.append(pVal, pSave);
-      controls.append(priceBox);
+      
+      controls.append(storeWrap, optsWrap, priceBox);
 
       ci.append(controls);
       dropzone.append(ci);
       
       total += finalPrice;
     });
+
+    // Checkout / Move to Deliveries Action
+    if(S.evalCart.length > 0) {
+      const checkoutWrap = mk('div'); checkoutWrap.style.cssText = 'padding:20px;text-align:center;border-top:1.5px solid var(--brd);margin-top:10px';
+      const checkoutBtn = mkBtn('🚀 בצע הזמנה והעבר למשלוחים', 'bp', async () => {
+        if(!confirm('מוכנים להזמין את הפריטים בסל? הם יעברו ללשונית "משלוחים".')) return;
+        
+        const itemIds = S.evalCart.map(e => e.user_item_id);
+        await sb.from('user_items').update({ is_ordered: true }).in('id', itemIds);
+        
+        // Refresh local state
+        await loadItems();
+        S.dashTab = 'delivery';
+        renderDash();
+        toast('🚀 הפריטים הועברו למשלוחים!');
+      });
+      checkoutBtn.style.padding = '12px 24px'; checkoutBtn.style.fontSize = '15px';
+      checkoutWrap.append(checkoutBtn);
+      dropzone.append(checkoutWrap);
+    }
 
     const totalEl = $('eval-total');
     if(totalEl) totalEl.textContent = '₪' + Math.round(total).toLocaleString();

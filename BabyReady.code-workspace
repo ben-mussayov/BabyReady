@@ -1,7 +1,11 @@
 {
 	"folders": [
 		{
+<<<<<<< Updated upstream
 			"name": "BabyReady",
+=======
+			"name": "Baby Purchasing",
+>>>>>>> Stashed changes
 			"path": "."
 		},
 		{
