@@ -441,7 +441,7 @@ function $(id){ return document.getElementById(id); }
 function mk(tag,cls){ const e=document.createElement(tag); if(cls) e.className=cls; return e; }
 function tx(s){ return document.createTextNode(String(s==null?'':s)); }
 function mkBtn(label,cls,fn){ const b=mk('button','btn '+cls); b.textContent=label; b.onclick=fn; return b; }
-function mkInp(type,ph,val){ const i=mk('input'); i.type=type; i.placeholder=ph||''; if(val!=null) i.value=val; return i; }
+function mkInp(type,ph,val){ const i=mk('input'); i.type=type; i.placeholder=ph||''; if(val!=null) i.value=val; if(type==='number') i.step='0.01'; return i; }
 function mkSel(opts,sel){ const s=mk('select'); opts.forEach(([v,l])=>{ const o=mk('option'); o.value=v; o.textContent=l; if(v===sel) o.selected=true; s.append(o); }); return s; }
 function mkFld(label,children){ const d=mk('div','fld'); const l=mk('label'); l.textContent=label; d.append(l,...children); return d; }
 
@@ -1613,103 +1613,110 @@ async function scrapeNewModel(url, targetWrap, onSuccessCallback, preselectedCat
     }
     
     const saveBtn = mkBtn('✨ שמור והוסף למוצרים שלי', 'bp bfw', async() => {
-      const brandName = brandInp.value.trim();
-      const modelName = modelInp.value.trim();
-      let catId = catSel.value;
-      const urgency = urgSel.value;
-      const price = parseFloat(priceInp.value) || 0;
-      const desc = descInp.value.trim();
-      const imageUrl = imgInp.value.trim();
-      
-      if(!brandName || !modelName || !catId){ toast('יש למלא מותג, שם דגם וקטגוריה', true); return; }
-      
-      // 0. Handle New Category or Urgency Update
-      if(catId === 'new') {
-        const cn = nName.value.trim();
-        const ce = selectedIcon;
-        if(!cn){ toast('יש להזין שם לקטגוריה החדשה', true); return; }
-        const cid = 'cat_' + Date.now().toString(36);
-        const {data: nc, error: nce} = await sb.from('categories').insert({
-          id: cid, name_he: cn, name_en: cn, icon: ce, urgency: urgency
-        }).select().single();
-        if(nce) { toast(nce.message, true); return; }
-        nc.he = cn; nc.u = urgency; // Match local structure
-        CATS.push(nc); catId = cid;
-      } else {
-        const currentCat = getCat(catId);
-        if(currentCat && currentCat.u !== urgency) {
-          await sb.from('categories').update({ urgency: urgency }).eq('id', catId);
-          currentCat.u = urgency;
+      try {
+        const brandName = brandInp.value.trim();
+        const modelName = modelInp.value.trim();
+        let catId = catSel.value;
+        const urgency = urgSel.value;
+        const price = parseFloat(priceInp.value) || 0;
+        const desc = descInp.value.trim();
+        const imageUrl = imgInp.value.trim();
+        
+        if(!brandName || !modelName || !catId){ toast('יש למלא מותג, שם דגם וקטגוריה', true); return; }
+        
+        // 0. Handle New Category or Urgency Update
+        if(catId === 'new') {
+          const cn = nName.value.trim();
+          const ce = selectedIcon;
+          if(!cn){ toast('יש להזין שם לקטגוריה החדשה', true); return; }
+          const cid = 'cat_' + Date.now().toString(36);
+          const {data: nc, error: nce} = await sb.from('categories').insert({
+            id: cid, name_he: cn, name_en: cn, icon: ce, urgency: urgency
+          }).select().single();
+          if(nce) { toast(nce.message, true); return; }
+          nc.he = cn; nc.u = urgency; // Match local structure
+          CATS.push(nc); catId = cid;
+        } else {
+          const currentCat = getCat(catId);
+          if(currentCat && currentCat.u !== urgency) {
+            await sb.from('categories').update({ urgency: urgency }).eq('id', catId);
+            currentCat.u = urgency;
+          }
         }
-      }
 
-      let finalStoreId = pd.store_id;
-      if(pd.store_id === 'other') {
-        const sName = storeSection.querySelector('input[type="text"]').value.trim();
-        const sUrl = storeSection.querySelector('input[type="url"]').value.trim();
-        if(!sName || !sUrl){ toast('חובה להזין שם חנות ואת כתובת האתר שלה', true); return; }
-        
-        const cleanUrl = new URL(sUrl).hostname.replace('www.', '').toLowerCase();
-        finalStoreId = cleanUrl.replace(/[^a-z0-9]/g, '');
-        // Create store if not exists
-        const storeLogo = scraped.store_logo_url || '';
-        await sb.from('stores').upsert({
-          id: finalStoreId,
-          name_he: sName,
-          name_en: sName,
-          url: sUrl,
-          logo_url: storeLogo,
-          active: true
-        });
-        
-        // Sync with local STORES object for immediate UI update
-        if (!STORES[finalStoreId]) {
-          STORES[finalStoreId] = {
-            name: sName,
+        let finalStoreId = pd.store_id;
+        if(pd.store_id === 'other') {
+          const sName = storeSection.querySelector('input[type="text"]').value.trim();
+          const sUrl = storeSection.querySelector('input[type="url"]').value.trim();
+          if(!sName || !sUrl){ toast('חובה להזין שם חנות ואת כתובת האתר שלה', true); return; }
+          
+          const cleanUrl = new URL(sUrl).hostname.replace('www.', '').toLowerCase();
+          finalStoreId = cleanUrl.replace(/[^a-z0-9]/g, '');
+          // Create store if not exists
+          const storeLogo = pd.store_logo_url || '';
+          await sb.from('stores').upsert({
+            id: finalStoreId,
+            name_he: sName,
+            name_en: sName,
             url: sUrl,
-            logo: storeLogo
-          };
+            logo_url: storeLogo,
+            active: true
+          });
+          
+          // Sync with local STORES object for immediate UI update
+          if (!STORES[finalStoreId]) {
+            STORES[finalStoreId] = {
+              name: sName,
+              url: sUrl,
+              logo: storeLogo
+            };
+          }
         }
-      }
 
-      saveBtn.disabled = true; saveBtn.textContent = '⏳ שומר נתונים...';
-      
-      // 1. Handle Brand
-      let {data: brandData} = await sb.from('brands').select('id').eq('name', brandName).single();
-      if(!brandData) {
-        const {data: nb} = await sb.from('brands').insert({name: brandName}).select().single();
-        brandData = nb;
-      }
-      
-      // 2. Handle Model
-      let {data: existingModel} = await sb.from('product_models').select('*').eq('category_id', catId).eq('brand_id', brandData.id).eq('model_name', modelName).single();
-      if(!existingModel) {
-        const {data: nm, error: me} = await sb.from('product_models').insert({
-          category_id: catId,
-          brand_id: brandData.id,
-          model_name: modelName,
-          description: desc,
-          image_url: imageUrl || null
-        }).select('*, brands(name)').single();
-        if(me){ toast(me.message, true); saveBtn.disabled=false; return; }
-        existingModel = nm;
-        S.models.push(nm);
-      }
-      
-      // 3. Handle Price (Global catalog)
-      if(price > 0 && finalStoreId !== 'other') {
-        await sb.from('product_prices').upsert({
-          model_id: existingModel.id,
-          store_id: finalStoreId,
-          price: price,
-          product_url: url,
-          image_url: imageUrl || null,
-          in_stock: true,
-          last_checked: new Date().toISOString()
-        });
-      }
+        saveBtn.disabled = true; saveBtn.textContent = '⏳ שומר נתונים...';
+        
+        // 1. Handle Brand
+        let {data: brandData} = await sb.from('brands').select('id').eq('name', brandName).single();
+        if(!brandData) {
+          const {data: nb} = await sb.from('brands').insert({name: brandName}).select().single();
+          brandData = nb;
+        }
+        
+        // 2. Handle Model
+        let {data: existingModel} = await sb.from('product_models').select('*').eq('category_id', catId).eq('brand_id', brandData.id).eq('model_name', modelName).single();
+        if(!existingModel) {
+          const {data: nm, error: me} = await sb.from('product_models').insert({
+            category_id: catId,
+            brand_id: brandData.id,
+            model_name: modelName,
+            description: desc,
+            image_url: imageUrl || null
+          }).select('*, brands(name)').single();
+          if(me){ toast(me.message, true); saveBtn.disabled=false; return; }
+          existingModel = nm;
+          S.models.push(nm);
+        }
+        
+        // 3. Handle Price (Global catalog)
+        if(price > 0 && finalStoreId !== 'other') {
+          await sb.from('product_prices').upsert({
+            model_id: existingModel.id,
+            store_id: finalStoreId,
+            price: price,
+            product_url: url,
+            image_url: imageUrl || null,
+            in_stock: true,
+            last_checked: new Date().toISOString()
+          });
+        }
 
-      onSuccessCallback(existingModel, url, imageUrl);
+        onSuccessCallback(existingModel, url, imageUrl);
+      } catch(e) {
+        console.error('Save button error:', e);
+        toast('שגיאה בשמירת הנתונים', true);
+        saveBtn.disabled = false;
+        saveBtn.textContent = '✨ שמור והוסף למוצרים שלי';
+      }
     });
     
     preview.append(saveBtn);
@@ -2206,10 +2213,11 @@ function buildEvaluationTab(){
       }
 
       const pVal = mk('div', 'ci-final-price');
-      pVal.textContent = '₪' + Math.round(finalPrice).toLocaleString();
+      pVal.textContent = '₪' + finalPrice.toLocaleString('he-IL', {minimumFractionDigits: 0, maximumFractionDigits: 2});
       
       const pSave = mk('div', 'ci-savings');
-      pSave.textContent = discountText ? `חיסכון: ₪${Math.round(basePrice - finalPrice).toLocaleString()} (${discountText})` : 'מחיר מלא';
+      const diff = basePrice - finalPrice;
+      pSave.textContent = diff > 0.01 ? `חיסכון: ₪${diff.toLocaleString('he-IL', {maximumFractionDigits: 2})} (${discountText})` : 'מחיר מלא';
       
       priceBox.append(pVal, pSave);
       
@@ -2242,11 +2250,11 @@ function buildEvaluationTab(){
     }
 
     const totalEl = $('eval-total');
-    if(totalEl) totalEl.textContent = '₪' + Math.round(total).toLocaleString();
+    if(totalEl) totalEl.textContent = '₪' + total.toLocaleString('he-IL', {minimumFractionDigits: 0, maximumFractionDigits: 2});
     const saveEl = $('eval-total-save');
     if(saveEl) {
       const saving = totalOriginal - total;
-      saveEl.textContent = saving > 0 ? `חיסכון כולל: ₪${Math.round(saving).toLocaleString()}` : '';
+      saveEl.textContent = saving > 0.01 ? `חיסכון כולל: ₪${saving.toLocaleString('he-IL', {maximumFractionDigits: 2})}` : '';
     }
   };
 
