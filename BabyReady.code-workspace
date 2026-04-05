@@ -1,10 +1,12 @@
 {
 	"folders": [
 		{
-			"path": "../AntiGravity Setup"
+			"name": "BabyReady",
+			"path": "."
 		},
 		{
-			"path": "."
+			"name": "AntiGravity Setup",
+			"path": "../AntiGravity Setup"
 		}
 	],
 	"settings": {}

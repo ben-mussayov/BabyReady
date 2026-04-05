@@ -54,7 +54,8 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--tx);min-hei
 .topbar{background:var(--surf);border-bottom:1px solid var(--brd);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
 .tbl{font-size:17px;font-weight:800;color:var(--grn);display:flex;align-items:center;gap:8px;letter-spacing:-.3px}
 .tbr{display:flex;align-items:center;gap:8px}
-.main{max-width:1100px;margin:0 auto;padding:20px;width:100%}
+.main{max-width:1100px;margin:0 auto;padding:20px;width:100%;transition:max-width 0.3s ease}
+.main.wide{max-width:100% !important}
 
 @media(max-width:680px){
   .app-sidebar{position:fixed;top:0;bottom:0;right:0}
@@ -110,11 +111,22 @@ textarea{resize:vertical;min-height:72px;line-height:1.5}
 .stat .num{font-size:26px;font-weight:800;line-height:1;letter-spacing:-.5px}
 .stat .lbl{font-size:10px;color:var(--t2);margin-top:3px;font-weight:500}
 
-/* ─── Filter bar ─── */
+/* ─── Filter bar & Sidebars ─── */
 .fbar{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);padding:10px 14px;margin-bottom:12px;display:flex;gap:7px;flex-wrap:wrap;align-items:center;box-shadow:var(--shadow)}
 .fbar input{flex:1;min-width:130px;padding:7px 10px;font-size:12px}
+
+.products-layout{display:flex;gap:30px;justify-content:center;margin:0 auto;width:100%}
+.products-sidebar{width:200px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;position:sticky;top:80px}
+.products-content{flex:1;max-width:900px;min-width:0}
+.search-full{margin-bottom:20px;width:100%}
+.search-full input{padding:12px 18px;font-size:15px;border-radius:var(--r);box-shadow:var(--shadow);border:1.5px solid var(--brd)}
+
 .pill{padding:5px 13px;border-radius:20px;border:1.5px solid var(--brd2);background:transparent;font-size:11px;font-weight:600;color:var(--t2);cursor:pointer;font-family:'Heebo',sans-serif;transition:all .15s}.pill:hover{background:var(--s2)}.pill.on{color:#fff!important;border-color:transparent}
-.p-all.on{background:var(--grn)}.p-critical.on{background:var(--red)}.p-high.on{background:var(--org)}.p-medium.on{background:var(--ylw)}.p-low.on{background:var(--grn)}.p-done.on{background:#888}
+.pill-v{width:100%;text-align:right;padding:12px 16px;border-radius:var(--rs);display:flex;align-items:center;gap:10px;font-size:13px;border:1.5px solid var(--brd);background:var(--surf);color:var(--t1);transition:all .2s;cursor:pointer}
+.pill-v:hover{border-color:var(--grn);background:var(--s2)}
+.pill-v.on{background:var(--gl);color:var(--grn);border:1.5px solid var(--grn);font-weight:700}
+/* Specific colors only for the inline pills, not the vertical sidebar ones */
+.pill.p-all.on{background:var(--grn)}.pill.p-critical.on{background:var(--red)}.pill.p-high.on{background:var(--org)}.pill.p-medium.on{background:var(--ylw)}.pill.p-low.on{background:var(--grn)}.pill.p-done.on{background:#888}
 
 /* ─── Product rows ─── */
 .prod-list{display:flex;flex-direction:column;gap:5px}
@@ -220,8 +232,9 @@ textarea{resize:vertical;min-height:72px;line-height:1.5}
 .spin{width:24px;height:24px;border:3px solid var(--brd);border-top-color:var(--grn);border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
 @keyframes spin{to{transform:rotate(360deg)}}
 .empty{text-align:center;padding:50px;color:var(--t2)}.ei{font-size:40px;margin-bottom:12px}
-.toast{position:fixed;bottom:22px;left:22px;background:#1c1a17;color:#fff;padding:11px 18px;border-radius:var(--r);font-size:13px;font-weight:500;z-index:2000;box-shadow:0 8px 24px rgba(0,0,0,.2);animation:fi .2s ease}
-@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#1c1a17;color:#fff;padding:12px 22px;border-radius:var(--r);font-size:13px;font-weight:600;z-index:2000;box-shadow:0 10px 30px rgba(0,0,0,0.3);animation:toast-in .25s cubic-bezier(0.4, 0, 0.2, 1);display:flex;align-items:center;gap:8px}
+@keyframes toast-in{from{opacity:0;transform:translate(-50%, -20px)}to{opacity:1;transform:translate(-50%, 0)}}
+@keyframes item-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .sep{height:1px;background:var(--brd);margin:14px 0}
 @media(max-width:600px){.stats{grid-template-columns:repeat(3,1fr)}.r2{grid-template-columns:1fr}.main{padding:12px}.topbar{padding:0 14px}.card{padding:20px}.model-grid{grid-template-columns:1fr 1fr}}
 /* ─── Category Accordion ─── */
@@ -234,6 +247,56 @@ textarea{resize:vertical;min-height:72px;line-height:1.5}
 .cat-accordion.open .cat-chev{transform:rotate(180deg)}
 .cat-body{max-height:0;overflow:hidden;transition:max-height .3s ease}
 .cat-accordion.open .cat-body{max-height:5000px}
+ 
+ /* ─── Evaluation Tab ─── */
+ .eval-layout{display:flex;gap:16px;height:calc(100vh - 120px);position:relative;width:100%}
+ .eval-sidebar{width:220px;background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);display:flex;flex-direction:column;overflow:hidden;box-shadow:var(--shadow);flex-shrink:0}
+ .eval-main{flex:1;background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);display:flex;flex-direction:column;overflow:hidden;box-shadow:var(--shadow2);position:relative}
+ .eval-hdr{padding:12px 16px;background:var(--s2);border-bottom:1px solid var(--brd);display:flex;justify-content:space-between;align-items:center}
+ .eval-list{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:6px}
+ .eval-dropzone{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:16px;background-image:radial-gradient(var(--brd) 1px, transparent 1px);background-size:20px 20px}
+ .eval-dropzone.over{background-color:var(--gl);outline:2px dashed var(--grn);outline-offset:-4px}
+ 
+ .eval-cat-header{padding:10px 12px;background:var(--s2);border-bottom:1px solid var(--brd);cursor:pointer;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;transition:background .15s}
+ .eval-cat-header:hover{background:var(--s3)}
+ .eval-cat-body{display:none;padding:6px;background:var(--surf);flex-direction:column;gap:5px}
+ .eval-cat-group.open .eval-cat-body{display:flex}
+ .eval-cat-group.open .eval-cat-header{border-bottom:1px solid var(--brd2)}
+ .eval-cat-chev{font-size:10px;color:var(--t3);transition:transform .2s;margin-right:auto}
+ .eval-cat-group.open .eval-cat-chev{transform:rotate(180deg)}
+
+ .eval-card{background:var(--surf);border:1px solid var(--brd);border-radius:var(--rs);padding:10px 12px;cursor:grab;transition:transform .1s, box-shadow .1s;user-select:none;font-size:11px}
+ .eval-card:hover{box-shadow:var(--shadow);border-color:var(--brd2)}
+ .eval-card.dragging{opacity:.5;transform:scale(0.95)}
+ 
+ .cart-item{background:var(--surf);border:1.5px solid var(--brd);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px;position:relative;animation:item-in .2s ease}
+ .cart-item:hover{border-color:var(--brd2)}
+ .ci-top{display:flex;gap:12px;align-items:center}
+ .ci-img{width:50px;height:50px;border-radius:6px;object-fit:cover;border:1px solid var(--brd)}
+ .ci-info{flex:1}
+ .ci-name{font-size:14px;font-weight:700}
+ .ci-cat{font-size:11px;color:var(--t2)}
+ 
+ .ci-controls{display:grid;grid-template-columns:1fr 1fr;gap:12px;background:var(--s2);padding:12px;border-radius:var(--rs)}
+ .ci-price-box{text-align:left;display:flex;flex-direction:column;justify-content:center}
+ .ci-final-price{font-size:18px;font-weight:800;color:var(--grn)}
+ .ci-savings{font-size:11px;color:var(--t2);margin-top:2px}
+ 
+ .club-selector{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+ .club-pill{padding:4px 10px;border-radius:15px;background:var(--surf);border:1px solid var(--brd);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
+ .club-pill.on{background:var(--grn);color:#fff;border-color:var(--grn)}
+ 
+ .eilat-toggle{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--tx)}
+ 
+  .eval-summary-card{background:var(--gl);border:2px solid var(--grn);border-radius:var(--r);padding:16px;margin-bottom:16px;box-shadow:var(--shadow2);animation:fi .3s ease}
+  .eval-summary-title{font-size:11px;font-weight:700;color:var(--gd);text-transform:uppercase;margin-bottom:10px}
+  .eval-summary-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+  .eval-summary-val{font-size:24px;font-weight:800;color:var(--grn);letter-spacing:-1px}
+  .eval-summary-save{font-size:12px;color:var(--grn);font-weight:700}
+
+  .eval-total-box{text-align:left}
+  .eval-total-label{font-size:12px;color:var(--t2);font-weight:600}
+  .eval-total-val{font-size:24px;font-weight:800;color:var(--grn);letter-spacing:-.5px}
 
 </style>
 </head>
@@ -355,6 +418,9 @@ let S = {
   openItemId: null,
   openCats: [],
   sidebarExpanded: false,
+  clubs: [], 
+  clubDiscounts: [],
+  evalCart: [],
 };
 
 function getCat(id){ return CATS.find(c=>c.id===id)||{}; }
@@ -531,12 +597,21 @@ async function afterLogin(){
     });
   }
 
-  const {data:models}=await sb.from('product_models')
+  // Fetch models from Supabase
+  const { data: fetchedModels } = await sb.from('product_models')
     .select('*, brands(name)')
-    .eq('active',true)
-    .order('is_karin_pick',{ascending:false});
-  S.models=models||[];
+    .eq('active', true)
+    .order('is_karin_pick', { ascending: false });
+  S.models = fetchedModels || [];
+  
+  // Load clubs and discounts
+  const { data: clubs } = await sb.from('buying_clubs').select('*');
+  S.clubs = clubs || [];
+  const { data: discounts } = await sb.from('club_discounts').select('*');
+  S.clubDiscounts = discounts || [];
+
   await loadItems();
+  await loadEvalCart();
 
   if(S.items && S.items.length > 0){
     renderDash();
@@ -559,6 +634,30 @@ async function loadItems(){
         .eq('model_id',item.model_id);
       item.product_prices=prices||[];
     }
+  }
+}
+
+async function loadEvalCart(){
+  const { data } = await sb.from('user_eval_cart').select('*').eq('user_id', S.user.id);
+  S.evalCart = data || [];
+}
+
+async function saveEvalItem(itemId, fields){
+  const existing = S.evalCart.find(e => e.user_item_id === itemId);
+  if(existing){
+    const { data, error } = await sb.from('user_eval_cart').update(fields).eq('id', existing.id).select().single();
+    if(!error && data) Object.assign(existing, data);
+  } else {
+    const { data, error } = await sb.from('user_eval_cart').insert({user_id: S.user.id, user_item_id: itemId, ...fields}).select().single();
+    if(!error && data) S.evalCart.push(data);
+  }
+}
+
+async function removeFromEval(itemId){
+  const existing = S.evalCart.find(e => e.user_item_id === itemId);
+  if(existing){
+    await sb.from('user_eval_cart').delete().eq('id', existing.id);
+    S.evalCart = S.evalCart.filter(e => e.id !== existing.id);
   }
 }
 
@@ -744,6 +843,7 @@ function renderDash(){
   const sbMenu=mk('div','sb-menu');
   const sitems=[
     {v:'products', l:'מוצרים', ico:'📋'},
+    {v:'evaluation', l:'מחשבון עלויות', ico:'💰'},
     {v:'gantt',    l:'ציר זמן', ico:'📅'},
     {v:'delivery', l:'משלוחים', ico:'🚚'}
   ];
@@ -826,8 +926,13 @@ function renderDash(){
 function renderMain(){
   const main=$('dash-main'); if(!main) return;
   main.innerHTML='';
+  main.classList.remove('wide');
 
   if(S.dashTab==='products') main.append(buildProductsTab());
+  else if(S.dashTab==='evaluation') {
+    main.classList.add('wide');
+    main.append(buildEvaluationTab());
+  }
   else if(S.dashTab==='gantt') main.append(buildGantt());
   else if(S.dashTab==='delivery') main.append(buildDelivery());
   else if(S.dashTab==='admin'&&S.isAdmin) main.append(buildAdmin());
@@ -837,18 +942,39 @@ function renderMain(){
    לשונית מוצרים
 ═══════════════════════════════════════════════ */
 function buildProductsTab(){
-  const frag=document.createDocumentFragment();
-  const fb=mk('div','fbar');
-  const si=mkInp('text','חיפוש…',S.filterQ);
-  si.oninput=e=>{ S.filterQ=e.target.value; refreshList(); };
-  fb.append(mkBtn('+ הוספת פריט','bp bsm',openAddItemModal));
+  const frag = document.createDocumentFragment();
+  const layout = mk('div', 'products-layout');
+  
+  // ─── Sidebar (Left) ───
+  const sidebar = mk('div', 'products-sidebar');
+  
+  const btnAdd = mkBtn('+ הוספת פריט', 'bp bsm', openAddItemModal);
+  btnAdd.style.marginBottom = '10px';
+  sidebar.append(btnAdd);
+
   [['all','הכל'],['critical','🔴 קריטי'],['high','🟠 דחוף'],['medium','🟡 בינוני'],['low','🟢 יכול לחכות'],['done','✓ נקנה']].forEach(([v,l])=>{
-    const p=mk('button','pill p-'+v+(S.filterU===v?' on':'')); p.textContent=l;
-    p.onclick=()=>{ S.filterU=v; refreshList(); }; fb.append(p);
+    const p = mk('div', 'pill-v p-' + v + (S.filterU === v ? ' on' : ''));
+    p.textContent = l;
+    p.onclick = () => { S.filterU = v; renderMain(); }; 
+    sidebar.append(p);
   });
-  fb.append(si); frag.append(fb);
-  const list=mk('div','prod-list'); list.id='prod-list';
-  buildList(list); frag.append(list);
+  
+  // ─── Main Content ───
+  const content = mk('div', 'products-content');
+  
+  const searchWrap = mk('div', 'search-full');
+  const si = mkInp('text', 'חיפוש מוצר...', S.filterQ);
+  si.oninput = e => { S.filterQ = e.target.value; refreshList(); };
+  searchWrap.append(si);
+  
+  const list = mk('div', 'prod-list'); list.id = 'prod-list';
+  buildList(list);
+  
+  content.append(searchWrap, list);
+  
+  // In RTL: sidebar(right), content(left)
+  layout.append(sidebar, content);
+  frag.append(layout);
   return frag;
 }
 
@@ -1729,13 +1855,259 @@ function buildDelivery(){
 }
 
 /* ═══════════════════════════════════════════════
+   מחשבון עלויות
+   ═══════════════════════════════════════════════ */
+function buildEvaluationTab(){
+  const frag = document.createDocumentFragment();
+  const layout = mk('div', 'eval-layout');
+  
+  // ─── Sidebar: My Items & Summary ───
+  const sidebar = mk('div', 'eval-sidebar');
+  
+  // New Summary Card (Calculated dynamically in refreshCart)
+  const summaryCard = mk('div', 'eval-summary-card');
+  summaryCard.innerHTML = `
+    <div class="eval-summary-title">סיכום סל משוער</div>
+    <div class="eval-summary-row">
+      <span class="eval-total-label">סה"כ לתשלום</span>
+      <div id="eval-total" class="eval-summary-val">₪0</div>
+    </div>
+    <div id="eval-total-save" class="eval-summary-save"></div>
+  `;
+  sidebar.append(summaryCard);
+
+  const sbHdr = mk('div', 'eval-hdr');
+  sbHdr.innerHTML = '<b>הציוד שלי</b> <span style="font-size:11px;color:var(--t2)">גרור מוצרים למרכז</span>';
+  
+  const list = mk('div', 'eval-list');
+  const inCartIds = S.evalCart.map(e => e.user_item_id);
+  const availableItems = S.items.filter(i => !inCartIds.includes(i.id));
+  
+  if(availableItems.length === 0 && S.items.length > 0) {
+    const msg = mk('div', 'empty'); msg.style.padding = '20px'; msg.textContent = 'כל המוצרים כבר במחשבון';
+    list.append(msg);
+  } else if(S.items.length === 0) {
+    const msg = mk('div', 'empty'); msg.style.padding = '20px'; msg.textContent = 'אין לך מוצרים ברשימה';
+    list.append(msg);
+  } else {
+    // Group available items by category
+    const grouped = {};
+    availableItems.forEach(item => {
+      const catId = item.category_id;
+      if(!grouped[catId]) grouped[catId] = { cat: getCat(catId), items: [] };
+      grouped[catId].items.push(item);
+    });
+
+    // Render grouped accordion
+    Object.values(grouped).forEach(group => {
+      const gBox = mk('div', 'eval-cat-group');
+      const gHdr = mk('div', 'eval-cat-header');
+      const gTitle = mk('div'); gTitle.textContent = (group.cat.icon||'📦') + ' ' + (group.cat.he || group.cat.id);
+      const gCount = mk('span'); gCount.style.cssText = 'font-size:10px;opacity:0.6;margin-right:4px'; gCount.textContent = `(${group.items.length})`;
+      const gChev = mk('span', 'eval-cat-chev'); gChev.textContent = '▼';
+      gHdr.append(gTitle, gCount, gChev);
+      
+      const gBody = mk('div', 'eval-cat-body');
+      group.items.forEach(item => {
+        const card = mk('div', 'eval-card');
+        card.draggable = true;
+        card.dataset.id = item.id;
+        const name = item.product_models ? (item.product_models.brands?.name + ' ' + item.product_models.model_name) : (item.custom_name || group.cat.he);
+        card.innerHTML = `<div style="font-weight:700">${name}</div>`;
+        
+        card.ondragstart = e => {
+          e.dataTransfer.setData('text/plain', item.id);
+          card.classList.add('dragging');
+        };
+        card.ondragend = () => card.classList.remove('dragging');
+        gBody.append(card);
+      });
+
+      gHdr.onclick = () => gBox.classList.toggle('open');
+      gBox.append(gHdr, gBody);
+      list.append(gBox);
+    });
+  }
+  
+  sidebar.append(sbHdr, list);
+  
+  // ─── Main: Drop Zone / Cart ───
+  const main = mk('div', 'eval-main');
+  const mHdr = mk('div', 'eval-hdr');
+  mHdr.innerHTML = '<b>סל הקניות לבדיקה</b>';
+  
+  const dropzone = mk('div', 'eval-dropzone');
+  
+  const refreshCart = () => {
+    dropzone.innerHTML = '';
+    let total = 0;
+    let totalOriginal = 0;
+
+    if(S.evalCart.length === 0) {
+      dropzone.innerHTML = '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--t3);text-align:center"><div style="font-size:48px;margin-bottom:12px">🛒</div><div>טרם נוספו מוצרים.<br>גרור מוצרים מהרשימה בצד לכאן.</div></div>';
+    }
+
+    S.evalCart.forEach(evalItem => {
+      const item = S.items.find(i => i.id === evalItem.user_item_id);
+      if(!item) return;
+
+      const ci = mk('div', 'cart-item');
+      const storePrices = (item.product_prices || []).sort((a,b) => a.price - b.price);
+      
+      // Top row: Info & Delete
+      const top = mk('div', 'ci-top');
+      const cat = getCat(item.category_id);
+      const imgUrl = item.image_url || item.product_models?.image_url;
+      
+      const img = mk('img', 'ci-img');
+      img.src = imgUrl || `https://via.placeholder.com/50?text=${cat.icon}`;
+      img.onerror = () => { img.style.display='none'; };
+      
+      const info = mk('div', 'ci-info');
+      const name = item.product_models ? (item.product_models.brands?.name + ' ' + item.product_models.model_name) : (item.custom_name || cat.he);
+      info.innerHTML = `<div class="ci-name">${name}</div><div class="ci-cat">${cat.he}</div>`;
+      
+      const del = mkBtn('✕', 'btn bg bsm bico', async() => {
+        await removeFromEval(item.id);
+        renderMain();
+      });
+      del.style.color = 'var(--t3)';
+
+      top.append(img, info, del);
+      ci.append(top);
+
+      // Controls: Store, Club, Eilat
+      const controls = mk('div', 'ci-controls');
+      
+      // Store Selector
+      const storeWrap = mk('div');
+      const sLabel = mk('label'); sLabel.style.cssText = 'display:block;font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px'; sLabel.textContent = 'חנות & מחיר בסיס';
+      const storeOpts = storePrices.map(p => [p.store_id, `${STORES[p.store_id]?.name || p.store_id} (₪${p.price})`]);
+      if(storeOpts.length === 0) {
+        storeOpts.push(['', 'אין מחירים זמינים למוצר זה']);
+      }
+      const sSel = mkSel(storeOpts, evalItem.selected_store_id || (storePrices[0]?.store_id));
+      sSel.onchange = async () => {
+        await saveEvalItem(item.id, {selected_store_id: sSel.value});
+        refreshCart();
+      };
+      storeWrap.append(sLabel, sSel);
+      
+      // Clubs & Eilat
+      const optsWrap = mk('div');
+      
+      const eWrap = mk('label', 'eilat-toggle');
+      const eChk = mk('input'); eChk.type = 'checkbox'; eChk.checked = !!evalItem.is_eilat;
+      eChk.onchange = async () => {
+        await saveEvalItem(item.id, {is_eilat: eChk.checked});
+        refreshCart();
+      };
+      eWrap.append(eChk, tx('רכישה באילת (ללא מע"מ)'));
+      
+      const clubWrap = mk('div', 'club-selector');
+      S.clubs.forEach(club => {
+        const isOn = evalItem.applied_club_id === club.id;
+        const pill = mk('div', 'club-pill' + (isOn ? ' on' : ''));
+        pill.textContent = club.name_he;
+        pill.onclick = async () => {
+          const newVal = isOn ? null : club.id;
+          await saveEvalItem(item.id, {applied_club_id: newVal});
+          refreshCart();
+        };
+        clubWrap.append(pill);
+      });
+      
+      optsWrap.append(eWrap, clubWrap);
+      controls.append(storeWrap, optsWrap);
+      
+      // Resulting Price Calculation
+      const priceBox = mk('div', 'ci-price-box');
+      const selectedStoreId = sSel.value;
+      const basePriceObj = storePrices.find(p => p.store_id === selectedStoreId);
+      let basePrice = basePriceObj ? basePriceObj.price : (item.custom_price || 0);
+      
+      totalOriginal += basePrice;
+
+      let finalPrice = basePrice;
+      let discountText = "";
+
+      if(evalItem.applied_club_id) {
+        const discount = S.clubDiscounts.find(d => d.club_id === evalItem.applied_club_id && d.store_id === selectedStoreId);
+        if(discount && discount.discount_percent > 0) {
+          finalPrice = finalPrice * (1 - (discount.discount_percent / 100));
+          discountText += `${discount.discount_percent}% הנחת מועדון`;
+        }
+      }
+
+      if(evalItem.is_eilat) {
+        finalPrice = finalPrice / 1.17;
+        discountText += (discountText ? " + " : "") + "פטור מע\"מ";
+      }
+
+      const pVal = mk('div', 'ci-final-price');
+      pVal.textContent = '₪' + Math.round(finalPrice).toLocaleString();
+      
+      const pSave = mk('div', 'ci-savings');
+      pSave.textContent = discountText ? `חיסכון: ₪${Math.round(basePrice - finalPrice).toLocaleString()} (${discountText})` : 'מחיר מלא';
+      
+      priceBox.append(pVal, pSave);
+      controls.append(priceBox);
+
+      ci.append(controls);
+      dropzone.append(ci);
+      
+      total += finalPrice;
+    });
+
+    const totalEl = $('eval-total');
+    if(totalEl) totalEl.textContent = '₪' + Math.round(total).toLocaleString();
+    const saveEl = $('eval-total-save');
+    if(saveEl) {
+      const saving = totalOriginal - total;
+      saveEl.textContent = saving > 0 ? `חיסכון כולל: ₪${Math.round(saving).toLocaleString()}` : '';
+    }
+  };
+
+  dropzone.ondragover = e => { e.preventDefault(); dropzone.classList.add('over'); };
+  dropzone.ondragleave = () => dropzone.classList.remove('over');
+  dropzone.ondrop = async e => {
+    e.preventDefault();
+    dropzone.classList.remove('over');
+    const itemId = e.dataTransfer.getData('text/plain');
+    if(itemId) {
+      const item = S.items.find(i => i.id === itemId);
+      
+      // Validation: Ensure the product has at least one price in the database
+      const hasPrices = item?.product_prices && item.product_prices.length > 0;
+      if (!hasPrices) {
+        toast('לא ניתן להוסיף מוצר זה לסל הקניות כי אין לו מחירים במערכת ⚠️', true);
+        return;
+      }
+
+      const bestPriceStore = (item.product_prices || []).sort((a,b)=>a.price-b.price)[0]?.store_id;
+      await saveEvalItem(itemId, {selected_store_id: bestPriceStore || null});
+      renderMain();
+    }
+  };
+
+  main.append(mHdr, dropzone);
+  
+  // Sidebar on the left in RTL
+  layout.append(sidebar, main);
+  
+  setTimeout(refreshCart, 0); // Trigger first calc
+  frag.append(layout);
+  return frag;
+}
+
+/* ═══════════════════════════════════════════════
    לוח ניהול (Admin)
 ═══════════════════════════════════════════════ */
 function buildAdmin(){
   const wrap=mk('div');
   const h2=mk('h2'); h2.textContent = '⚙️ לוח ניהול'; h2.style.marginBottom = '16px'; wrap.append(h2);
   const at=mk('div','mtabs'); at.style.maxWidth = '400px';
-  const tabs = [['models','📚 דגמים'],['stores','🏪 חנויות'],['users','👥 משתמשים']];
+  const tabs = [['models','📚 דגמים'],['stores','🏪 חנויות'],['clubs', '💳 מועדונים'],['users','👥 משתמשים']];
   let aTab = 'models';
   tabs.forEach(([v,l])=>{
     const b = mk('button','mtab'+(aTab===v?' on':'')); b.textContent = l;
@@ -1748,6 +2120,7 @@ function buildAdmin(){
     body.innerHTML = ''; body.style.opacity = '.4';
     if(aTab === 'models') body.append(await buildAdminModels());
     else if(aTab === 'stores') body.append(await buildAdminStores());
+    else if(aTab === 'clubs') body.append(await buildAdminClubs());
     else body.append(await buildAdminUsers());
     body.style.opacity = '1';
   }
@@ -1965,6 +2338,71 @@ async function buildAdminModels(){
   initialRender.forEach(renderModelRow);
 
   table.append(tbody); wrap.append(table); return wrap;
+}
+
+async function buildAdminClubs(){
+  const wrap = mk('div');
+  const h = mk('h3'); h.style.marginBottom = '12px'; h.textContent = '💳 ניהול מועדוני צרכנות והנחות';
+  wrap.append(h);
+
+  const { data: clubs } = await sb.from('buying_clubs').select('*').order('name_he');
+  const { data: stores } = await sb.from('stores').select('*').order('name_he');
+  const { data: discounts } = await sb.from('club_discounts').select('*');
+
+  const table = mk('table', 'admin-table');
+  const thead = mk('thead'); const hr = mk('tr');
+  hr.append(mk('th')); // Club name
+  stores.forEach(s => { 
+    const th = mk('th'); th.textContent = s.name_he; th.style.fontSize = '9px'; 
+    hr.append(th); 
+  });
+  thead.append(hr); table.append(thead);
+
+  const tbody = mk('tbody');
+  clubs.forEach(club => {
+    const tr = mk('tr');
+    const nameTd = mk('td'); nameTd.style.fontWeight = '700'; nameTd.textContent = club.name_he;
+    tr.append(nameTd);
+
+    stores.forEach(store => {
+      const td = mk('td');
+      const discount = discounts.find(d => d.club_id === club.id && d.store_id === store.id);
+      const val = discount ? discount.discount_percent : 0;
+
+      const inp = mkInp('number', '0%', val);
+      inp.style.width = '55px'; inp.style.fontSize = '11px'; inp.style.padding = '4px';
+      
+      inp.onchange = async () => {
+        const newPct = parseFloat(inp.value) || 0;
+        inp.disabled = true;
+        
+        if(newPct === 0 && discount) {
+          await sb.from('club_discounts').delete().eq('id', discount.id);
+        } else {
+          await sb.from('club_discounts').upsert({
+            club_id: club.id,
+            store_id: store.id,
+            discount_percent: newPct
+          }, { onConflict: 'club_id,store_id' });
+        }
+        
+        // Refresh local state for immediate sync
+        const { data: updated } = await sb.from('club_discounts').select('*');
+        S.clubDiscounts = updated || [];
+        
+        inp.disabled = false;
+        toast(`עודכן: ${club.name_he} ב-${store.name_he}`);
+      };
+
+      td.append(inp);
+      tr.append(td);
+    });
+    tbody.append(tr);
+  });
+
+  table.append(tbody);
+  wrap.append(table);
+  return wrap;
 }
 
 async function buildAdminUsers(){
