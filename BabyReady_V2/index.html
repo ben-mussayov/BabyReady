@@ -356,33 +356,7 @@ const PRI = ['stroller','car-seat','crib'];
 const PRI_NAMES = {stroller:'עגלת תינוק',  'car-seat':'כיסא בטיחות',  crib:'מיטה / עריסה'};
 const PRI_ICONS = {stroller:'👶', 'car-seat':'🚗', crib:'🛏️'};
 
-const CATS = [
-  {id:'stroller',  he:'עגלת תינוק',       icon:'👶', u:'critical'},
-  {id:'car-seat',  he:'כיסא בטיחות',      icon:'🚗', u:'critical'},
-  {id:'crib',      he:'מיטה / עריסה',     icon:'🛏️', u:'critical'},
-  {id:'changing',  he:'שידה מתחלפת',      icon:'🧷', u:'critical'},
-  {id:'diapers',   he:'חיתולים ומגבונים', icon:'🧸', u:'critical'},
-  {id:'clothes',   he:'בגדי תינוק',       icon:'👕', u:'critical'},
-  {id:'bottles',   he:'בקבוקי הזנה',      icon:'🍼', u:'critical'},
-  {id:'hospital',  he:'תיק חדר לידה',     icon:'👜', u:'critical'},
-  {id:'bathtub',   he:'אמבטיה לתינוק',    icon:'🛁', u:'high'},
-  {id:'monitor',   he:'מוניטור תינוק',    icon:'📷', u:'high'},
-  {id:'pump',      he:'משאבת חלב',        icon:'🤱', u:'high'},
-  {id:'carrier',   he:'מנשא תינוק',       icon:'🫂', u:'high'},
-  {id:'nursing',   he:'כרית הנקה',        icon:'🛋️', u:'high'},
-  {id:'health',    he:'ערכת בריאות',      icon:'🏥', u:'high'},
-  {id:'towels',    he:'מגבות רחצה',       icon:'🏊', u:'high'},
-  {id:'swaddles',  he:'שמיכות עטיפה',     icon:'🌯', u:'high'},
-  {id:'bassinet',  he:'סל תינוק נייד',    icon:'🌙', u:'medium'},
-  {id:'bag',       he:'תיק לעגלה',        icon:'👝', u:'medium'},
-  {id:'pacifier',  he:'מוצץ',             icon:'😶', u:'medium'},
-  {id:'nightlight',he:'מנורת לילה',       icon:'🌕', u:'medium'},
-  {id:'diaperpail',he:'שפיכולית',         icon:'🗑️', u:'medium'},
-  {id:'playmat',   he:'שטיח פעילות',      icon:'🎯', u:'low'},
-  {id:'swing',     he:'נדנדה / בוינסר',   icon:'🎠', u:'low'},
-  {id:'whitenoise',he:'מכונת רעש לבן',    icon:'🔊', u:'low'},
-  {id:'highchair', he:'כיסא אוכל גבוה',   icon:'🪑', u:'low'},
-];
+let CATS = [];
 
 const UHE = {critical:'🔴 קריטי', high:'🟠 דחוף', medium:'🟡 בינוני', low:'🟢 יכול לחכות'};
 const UCLS = {critical:'bc', high:'bh', medium:'bm', low:'bl2'};
@@ -484,13 +458,26 @@ function toast(msg, err=false){
 /* ═══════════════════════════════════════════════
    MODAL
 ═══════════════════════════════════════════════ */
-function openModal(title, content){
+function openModal(title, content, c=null){
   closeModal();
   const ov=mk('div','ov'); ov.id='modal-ov';
   ov.onclick=e=>{ if(e.target===ov) closeModal(); };
   const box=mk('div','mbox');
   const hdr=mk('div','mhdr');
   const ttl=mk('div','mtitle'); ttl.textContent=title;
+  if(c){
+    const del = mk('div', 'gs-del'); del.innerHTML = '🗑️'; del.style.fontSize = '12px';
+    del.onclick = async (e) => {
+      e.stopPropagation();
+      const catItems = S.items.filter(i => i.category_id === c.id);
+      if(catItems.length > 0) { toast('לא ניתן למחוק קטגוריה עם מוצרים. מחק תחילה את כל המוצרים שבתוכה.', true); return; }
+      if(!confirm(`האם אתה בטוח שברצונך למחוק את הקטגוריה "${c.he}"?`)) return;
+      await sb.from('categories').delete().eq('id', c.id);
+      CATS = CATS.filter(x => x.id !== c.id);
+      renderDash(); toast('הקטגוריה נמחקה'); closeModal();
+    };
+    hdr.append(del);
+  }
   const cls=mk('button','mclose'); cls.textContent='✕'; cls.onclick=closeModal;
   hdr.append(cls,ttl);
   box.append(hdr,content); ov.append(box);
@@ -610,6 +597,18 @@ function renderAuth(){
 /* ═══════════════════════════════════════════════
    אחרי כניסה
 ═══════════════════════════════════════════════ */
+async function loadCats(){
+  const {data, error} = await sb.from('categories').select('*').order('priority', {ascending:true});
+  if(error) { console.error('Error loading categories:', error); return; }
+  CATS = (data||[]).map(c => ({
+    id: c.id,
+    he: c.name_he,
+    icon: c.icon,
+    u: c.urgency,
+    priority: c.priority
+  }));
+}
+
 async function afterLogin(){
   S.isAdmin = (S.profile?.is_admin === true || S.user?.email === 'benmussayov@gmail.com');
 
@@ -645,6 +644,7 @@ async function afterLogin(){
   const { data: discounts } = await sb.from('club_discounts').select('*');
   S.clubDiscounts = discounts || [];
 
+  await loadCats();
   await loadItems();
   await loadEvalCart();
 
@@ -1550,9 +1550,39 @@ async function scrapeNewModel(url, targetWrap, onSuccessCallback, preselectedCat
     }
     
     const r1c2 = mk('div'); r1c2.style.flex = '1';
-    const catSel=mkSel([['','-- שייך לקטגוריה (חובה) --'],...CATS.map(c=>[c.id,c.icon+' '+c.he])], preselectedCat || '');
+    const catSel=mkSel([['','-- שייך לקטגוריה (חובה) --'],...CATS.map(c=>[c.id,c.icon+' '+c.he]),['new','+ הוסף קטגוריה חדשה...']], preselectedCat || '');
     const brandInp = mkInp('text', 'מותג (Bugaboo, Cybex...)', pd.brand || '');
-    r1c2.append(mkFld('קטגוריה', [catSel]), mkFld('מותג', [brandInp]));
+    
+    // New Category Section (hidden)
+    const newCatSection = mk('div'); newCatSection.style.cssText = 'display:none;background:var(--s1);border:1px dashed var(--brd);border-radius:10px;padding:12px;margin:10px 0;flex-direction:column;gap:10px';
+    const nName = mkInp('text', 'שם הקטגוריה (אמבטיה, צעצועים...)');
+    
+    const iconWrap = mk('div'); iconWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-top:6px';
+    const icons = ['👶','🍼','🧸','🚗','🚲','👗','🛁','🪑','📦','🏥','🫂','📷','🛋️','🌙','👝','😶','🌕','🗑️','🎯','🎠','🔊'];
+    let selectedIcon = '📦';
+    icons.forEach(ico => {
+      const b = mk('button'); b.textContent = ico; b.style.cssText = 'width:32px;height:32px;border:1px solid var(--brd);border-radius:4px;background:#fff;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:0.2s';
+      b.onclick = (e) => { e.preventDefault(); selectedIcon = ico; iconWrap.querySelectorAll('button').forEach(btn => btn.style.borderColor='var(--brd)'); b.style.borderColor='var(--grn)'; b.style.background='var(--gl)'; };
+      if(ico==='📦') { b.style.borderColor='var(--grn)'; b.style.background='var(--gl)'; }
+      iconWrap.append(b);
+    });
+
+    newCatSection.append(mkFld('שם קטגוריה חדשה', [nName]), mkFld('בחר אייקון', [iconWrap]));
+
+    // Shared Urgency
+    const urgSel = mkSel([['critical','🔴 קריטי'],['high','🟠 דחוף'],['medium','🟡 בינוני'],['low','🟢 יכול לחכות']], '');
+    const urgFld = mkFld('דחיפות הקטגוריה', [urgSel]);
+    
+    catSel.onchange = () => {
+      newCatSection.style.display = catSel.value === 'new' ? 'flex' : 'none';
+      if(catSel.value && catSel.value !== 'new') {
+        const c = getCat(catSel.value);
+        if(c) urgSel.value = c.urgency || 'medium';
+      }
+    };
+    if(preselectedCat) { const c = getCat(preselectedCat); if(c) urgSel.value = c.urgency || 'medium'; }
+
+    r1c2.append(mkFld('קטגוריה', [catSel]), newCatSection, mkFld('מותג', [brandInp]), urgFld);
     row1.append(r1c2);
     preview.append(row1);
     
@@ -1585,13 +1615,34 @@ async function scrapeNewModel(url, targetWrap, onSuccessCallback, preselectedCat
     const saveBtn = mkBtn('✨ שמור והוסף למוצרים שלי', 'bp bfw', async() => {
       const brandName = brandInp.value.trim();
       const modelName = modelInp.value.trim();
-      const catId = catSel.value;
+      let catId = catSel.value;
+      const urgency = urgSel.value;
       const price = parseFloat(priceInp.value) || 0;
       const desc = descInp.value.trim();
       const imageUrl = imgInp.value.trim();
       
       if(!brandName || !modelName || !catId){ toast('יש למלא מותג, שם דגם וקטגוריה', true); return; }
       
+      // 0. Handle New Category or Urgency Update
+      if(catId === 'new') {
+        const cn = nName.value.trim();
+        const ce = selectedIcon;
+        if(!cn){ toast('יש להזין שם לקטגוריה החדשה', true); return; }
+        const cid = 'cat_' + Date.now().toString(36);
+        const {data: nc, error: nce} = await sb.from('categories').insert({
+          id: cid, name_he: cn, name_en: cn, icon: ce, urgency: urgency
+        }).select().single();
+        if(nce) { toast(nce.message, true); return; }
+        nc.he = cn; nc.u = urgency; // Match local structure
+        CATS.push(nc); catId = cid;
+      } else {
+        const currentCat = getCat(catId);
+        if(currentCat && currentCat.u !== urgency) {
+          await sb.from('categories').update({ urgency: urgency }).eq('id', catId);
+          currentCat.u = urgency;
+        }
+      }
+
       let finalStoreId = pd.store_id;
       if(pd.store_id === 'other') {
         const sName = storeSection.querySelector('input[type="text"]').value.trim();
