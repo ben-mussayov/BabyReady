@@ -1085,28 +1085,29 @@ function buildProductsTab(){
   const frag = document.createDocumentFragment();
   const layout = mk('div', 'products-layout');
   
-  // ─── Mobile Header (Add & Urgency Filter) ───
+  // ─── Mobile Header (Filter Drawer & Add) ───
   if(window.innerWidth <= 768) {
     const mobileHeader = mk('div');
-    mobileHeader.style.cssText = 'padding:0 12px 15px 12px;display:flex;flex-direction:column;gap:12px';
+    mobileHeader.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:0 12px 15px 12px';
     
-    // Line 1: Add Button
-    const addRow = mk('div'); addRow.style.cssText = 'display:flex;justify-content:flex-start';
-    const addBtn = mkBtn('+ הוסף מוצר ✨', 'bp bsm', openAddItemModal);
-    addBtn.style.padding = '8px 18px';
-    addRow.append(addBtn);
-
-    // Line 2: Urgency Filter Bar (Pills)
-    const filterRow = mk('div', 'fbar');
-    filterRow.style.cssText = 'flex-wrap:wrap;gap:8px;justify-content:flex-start;padding:4px 0';
-    [['all','הכל'],['critical','🔴 קריטי'],['high','🟠 דחוף'],['medium','🟡 בינוני'],['low','🟢 יכול לחכות'],['done','✓ נקנה']].forEach(([v,l])=>{
-      const p = mk('div', 'pill p-' + v + (S.filterU === v ? ' on' : ''));
-      p.textContent = l;
-      p.onclick = () => { S.filterU = v; renderMain(); }; 
-      filterRow.append(p);
+    const filterBtn = mkBtn('סנן', 'bs bsm', () => {
+      const d = mk('div');
+      
+      const hU = mk('div', 'drawer-section-title'); hU.textContent = 'עדיפות';
+      const uWrap = mk('div'); uWrap.style.cssText = 'display:flex;flex-direction:column;gap:8px;margin-bottom:20px';
+      [['all','הכל'],['critical','🔴 קריטי'],['high','🟠 דחוף'],['medium','🟡 בינוני'],['low','🟢 יכול לחכות'],['done','✓ נקנה']].forEach(([v,l])=>{
+        const p = mk('div', 'pill-v p-' + v + (S.filterU === v ? ' on' : ''));
+        p.textContent = l;
+        p.onclick = () => { S.filterU = v; closeDrawer(); renderMain(); }; 
+        uWrap.append(p);
+      });
+      
+      d.append(hU, uWrap);
+      openDrawer('סינון מוצרים', d);
     });
-
-    mobileHeader.append(addRow, filterRow);
+    
+    const addBtn = mkBtn('+ הוסף', 'bp bsm', openAddItemModal);
+    mobileHeader.append(filterBtn, addBtn);
     frag.append(mobileHeader);
   }
 
