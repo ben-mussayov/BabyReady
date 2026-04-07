@@ -2095,36 +2095,38 @@ function buildDelivery(){
       ctrls.append(ordGrp, devGrp);
 
       const timelineWrap = mk('div'); 
-      timelineWrap.style.cssText = 'position:relative;height:30px;background:var(--s2);border-radius:15px;margin-bottom:12px;overflow:hidden;border:1px solid var(--brd)';
+      timelineWrap.style.cssText = 'position:relative;height:35px;background:var(--s2);border-radius:18px;margin-bottom:12px;overflow:hidden;border:1px solid var(--brd);display:flex;align-items:center';
       
-      const todayMarker = mk('div'); todayMarker.style.cssText = `position:absolute;top:0;bottom:0;width:2px;background:rgba(0,100,255,0.2);z-index:3;right:${getPct(now)}%`;
-      const dueMarker = mk('div'); dueMarker.style.cssText = `position:absolute;top:0;bottom:0;width:2px;background:rgba(255,0,0,0.2);z-index:1;right:${getPct(due)}%`;
-      timelineWrap.append(todayMarker, dueMarker);
-
-      const orderDate = p.ordered_at ? new Date(p.ordered_at) : new Date(p.created_at);
-      const deliveryDate = p.estimated_delivery_date ? new Date(p.estimated_delivery_date) : null;
-      const barRight = getPct(orderDate);
-      const barEnd = p.purchased ? getPct(new Date(p.purchased_at)) : (deliveryDate ? getPct(deliveryDate) : getPct(now));
-      const barWidth = Math.max(5, Math.abs(barEnd - barRight));
+      const dueMarker = mk('div'); dueMarker.style.cssText = `position:absolute;top:0;bottom:0;width:2.5px;background:rgba(255,0,0,0.4);z-index:2;right:${getPct(due)}%`;
 
       const bar = mk('div', 'gb-bar' + (p.purchased ? '' : ' pending'));
-      bar.style.right = Math.min(barRight, barEnd) + '%'; 
-      bar.style.width = barWidth + '%';
-      bar.style.height = '100%'; bar.style.borderRadius = '0';
+      bar.style.height = '100%'; bar.style.borderRadius = '0'; bar.style.display = 'flex'; bar.style.alignItems = 'center'; bar.style.justifyContent = 'center';
       
       if(p.purchased) {
-        bar.style.background = '#81c784'; // Light green
-        bar.innerHTML = `<span style="font-size:10px;font-weight:800;color:#fff;width:100%;text-align:center">Delivered - התקבל</span>`;
+        bar.style.right = '0';
+        bar.style.width = '100%';
+        bar.style.background = '#81c784'; // Premium Light Green
+        bar.innerHTML = `<span style="font-size:13px;font-weight:900;color:#fff;letter-spacing:0.5px">Delivered - התקבל</span>`;
+        timelineWrap.append(bar);
       } else {
+        const orderDate = p.ordered_at ? new Date(p.ordered_at) : new Date(p.created_at);
+        const deliveryDate = p.estimated_delivery_date ? new Date(p.estimated_delivery_date) : null;
+        
+        // Always full from the start (RTL right) up to Today
+        bar.style.right = '0';
+        bar.style.width = getPct(now) + '%';
+        
+        const deliveryDatePct = deliveryDate ? getPct(deliveryDate) : getPct(now);
+        
         if(deliveryDate) {
           const dText = mk('div');
-          dText.style.cssText = `position:absolute;top:-2px;right:${getPct(due)}%;margin-right:8px;font-size:10px;font-weight:800;color:var(--t2);white-space:nowrap;z-index:4`;
-          dText.innerHTML = `${deliveryDate.getDate()}.${deliveryDate.getMonth()+1} 🚚`;
+          dText.style.cssText = `position:absolute;top:50%;transform:translateY(-50%);right:${getPct(due)}%;margin-right:12px;font-size:11px;font-weight:800;color:var(--t2);white-space:nowrap;z-index:4`;
+          const dDiff = Math.round((deliveryDate - now) / 86400000);
+          dText.innerHTML = `${dDiff > 0 ? dDiff : ''} ${deliveryDate.getDate()}.${deliveryDate.getMonth()+1} 🚚`;
           timelineWrap.append(dText);
         }
+        timelineWrap.append(dueMarker, bar);
       }
-      
-      timelineWrap.append(bar);
 
       const recBtn = mkBtn(p.purchased ? '↺' : '✓ הפריט התקבל', p.purchased ? 'bs bfw' : 'bp bfw', async () => {
         const newState = !p.purchased;
