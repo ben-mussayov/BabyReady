@@ -1155,7 +1155,16 @@ function buildList(list){
   });
   if(S.filterU==='done') items=items.filter(p=>p.purchased);
   else if(S.filterU!=='all') items=items.filter(p=>p._cat?.u===S.filterU);
-  if(S.filterQ){ const q=S.filterQ; items=items.filter(p=>(p.product_models?.model_name||p.custom_name||'').includes(q)||(p._cat?.he||'').includes(q)); }
+  if(S.filterQ){ 
+    const q=S.filterQ.toLowerCase(); 
+    items=items.filter(p=>{
+      const mName = (p.product_models?.model_name || '').toLowerCase();
+      const bName = (p.product_models?.brands?.name || '').toLowerCase();
+      const cName = (p.custom_name || '').toLowerCase();
+      const catName = (p._cat?.he || '').toLowerCase();
+      return mName.includes(q) || bName.includes(q) || cName.includes(q) || catName.includes(q);
+    }); 
+  }
   if(!items.length){
     const e=mk('div','empty');
     const ei=mk('div','ei'); ei.textContent='📭';
@@ -1187,7 +1196,7 @@ function buildList(list){
     const catItems = grouped[catId];
     
     const catAccordion = mk('div', 'cat-accordion');
-    if (S.openCats.includes(catId)) catAccordion.classList.add('open');
+    if (S.openCats.includes(catId) || (S.filterQ && S.filterQ.trim() !== '')) catAccordion.classList.add('open');
 
     const catHeader = mk('div', 'cat-header');
     catHeader.onclick = () => {
