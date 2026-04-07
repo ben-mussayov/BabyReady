@@ -1087,7 +1087,7 @@ function buildProductsTab(){
     const mobileFilters = mk('div', 'fbar');
     mobileFilters.style.cssText = 'justify-content:space-between;padding:8px 12px;margin-bottom:15px';
     
-    const filterBtn = mkBtn('🔍 פילטור וחיפוש', 'bs bsm', () => {
+    const filterBtn = mkBtn('סנן', 'bs bsm', () => {
       const d = mk('div');
       
       const hU = mk('div', 'drawer-section-title'); hU.textContent = 'עדיפות';
@@ -2111,14 +2111,22 @@ function buildDelivery(){
       bar.style.right = Math.min(barRight, barEnd) + '%'; 
       bar.style.width = barWidth + '%';
       bar.style.height = '100%'; bar.style.borderRadius = '0';
-      if(p.purchased) bar.style.background = 'var(--grn)';
       
-      if(deliveryDate) bar.innerHTML = `<span style="font-size:9px">🚚 ${deliveryDate.toLocaleDateString('he-IL',{month:'numeric',day:'numeric'})}</span>`;
-      else bar.innerHTML = `<span style="font-size:9px">⏳ בדרך</span>`;
+      if(p.purchased) {
+        bar.style.background = '#81c784'; // Light green
+        bar.innerHTML = `<span style="font-size:10px;font-weight:800;color:#fff;width:100%;text-align:center">Delivered - התקבל</span>`;
+      } else {
+        if(deliveryDate) {
+          const dText = mk('div');
+          dText.style.cssText = `position:absolute;top:-2px;right:${getPct(due)}%;margin-right:8px;font-size:10px;font-weight:800;color:var(--t2);white-space:nowrap;z-index:4`;
+          dText.innerHTML = `${deliveryDate.getDate()}.${deliveryDate.getMonth()+1} 🚚`;
+          timelineWrap.append(dText);
+        }
+      }
       
       timelineWrap.append(bar);
 
-      const recBtn = mkBtn(p.purchased ? '↺ בטל סימון כהתקבל' : '✓ הפריט התקבל', p.purchased ? 'bs bfw' : 'bp bfw', async () => {
+      const recBtn = mkBtn(p.purchased ? '↺' : '✓ הפריט התקבל', p.purchased ? 'bs bfw' : 'bp bfw', async () => {
         const newState = !p.purchased;
         await sb.from('user_items').update({ purchased: newState, purchased_at: newState ? new Date().toISOString() : null }).eq('id', p.id);
         p.purchased = newState; renderDash();
