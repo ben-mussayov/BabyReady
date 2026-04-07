@@ -1106,7 +1106,7 @@ function buildProductsTab(){
       
       const hU = mk('div', 'drawer-section-title'); hU.textContent = 'עדיפות';
       const uWrap = mk('div'); uWrap.style.cssText = 'display:flex;flex-direction:column;gap:8px;margin-bottom:20px';
-      [['all','הכל'],['critical','🔴 קריטי'],['high','🟠 דחוף'],['medium','🟡 בינוני'],['low','🟢 יכול לחכות'],['done','✓ נקנה']].forEach(([v,l])=>{
+      [['all','הכל'],['critical','🔴 קריטי'],['high','🟠 דחוף'],['medium','🟡 בינוני'],['low','🟢 יכול לחכות']].forEach(([v,l])=>{
         const p = mk('div', 'pill-v p-' + v + (S.filterU === v ? ' on' : ''));
         p.textContent = l;
         p.onclick = () => { S.filterU = v; closeDrawer(); renderMain(); }; 
@@ -1129,7 +1129,7 @@ function buildProductsTab(){
   btnAdd.style.marginBottom = '10px';
   sidebar.append(btnAdd);
 
-  [['all','הכל'],['critical','🔴 קריטי'],['high','🟠 דחוף'],['medium','🟡 בינוני'],['low','🟢 יכול לחכות'],['done','✓ נקנה']].forEach(([v,l])=>{
+  [['all','הכל'],['critical','🔴 קריטי'],['high','🟠 דחוף'],['medium','🟡 בינוני'],['low','🟢 יכול לחכות']].forEach(([v,l])=>{
     const p = mk('div', 'pill-v p-' + v + (S.filterU === v ? ' on' : ''));
     p.textContent = l;
     p.onclick = () => { S.filterU = v; renderMain(); }; 
