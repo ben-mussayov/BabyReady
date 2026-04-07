@@ -1,6 +1,23 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="512" height="512" rx="100" fill="#ffffff"/>
-  <path d="M256 120C210 120 180 150 180 190V300C180 340 210 370 256 370C300 370 330 340 330 300V190C330 150 300 120 256 120Z" fill="#1a5c3a"/>
-  <rect x="220" y="370" width="70" height="40" rx="10" fill="#1a5c3a"/>
-  <circle cx="256" cy="190" r="30" fill="white" opacity="0.3"/>
+  <!-- Transparent Background -->
+  <rect width="512" height="512" fill="transparent"/>
+  
+  <!-- Stylized Baby Bottle (Matching the user's reference) -->
+  <g transform="translate(256, 180) rotate(-45)">
+    <!-- Bottle Outline/Shadow -->
+    <rect x="-65" y="-105" width="130" height="210" rx="35" fill="#ca806c"/>
+    <!-- Bottle Body -->
+    <rect x="-55" y="-95" width="110" height="190" rx="30" fill="#f6d3c1"/>
+    <!-- Liquid/Details -->
+    <path d="M-55 20 Q0 30 55 20 L55 65 Q0 75 -55 65 Z" fill="#eb8c76" opacity="0.4"/>
+    <rect x="-25" y="-10" width="12" height="30" rx="6" transform="rotate(20)" fill="#ca806c" opacity="0.6"/>
+    <rect x="15" y="10" width="12" height="30" rx="6" transform="rotate(20)" fill="#ca806c" opacity="0.6"/>
+    
+    <!-- Bottle Cap (Nipple) -->
+    <path d="M-35 -105 Q-35 -160 0 -160 Q35 -160 35 -105 Z" fill="#e9ba55"/>
+    <path d="M-35 -105 L35 -105 C35 -100 -35 -100 -35 -105 Z" fill="#ca806c" opacity="0.3"/>
+  </g>
+
+  <!-- "BabyReady" Text (Matching the user's reference font style) -->
+  <text x="50%" y="450" text-anchor="middle" font-family="Arial, sans-serif" font-weight="950" font-size="88" fill="#000000">BabyReady</text>
 </svg>
