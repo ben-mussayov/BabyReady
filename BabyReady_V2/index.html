@@ -2134,14 +2134,6 @@ function buildDelivery(){
         bar.style.zIndex = '1';
         
         if(deliveryDate) {
-          const dDiff = Math.round((deliveryDate - now) / 86400000);
-          
-          // Fixed center text in dark gray for contrast
-          const label = mk('div');
-          label.style.cssText = 'position:absolute;z-index:10;font-size:12px;font-weight:800;color:#4c4a45;pointer-events:none';
-          label.innerHTML = `${dDiff} ימים 🚚`;
-          timelineWrap.append(label);
-
           // Delivery marker (The target point) - small indicator next to target
           const dMarker = mk('div');
           const dPct = getPct(deliveryDate);
@@ -2163,7 +2155,16 @@ function buildDelivery(){
       });
 
       card.append(top);
-      if(!p.purchased) card.append(ctrls);
+      if(!p.purchased) {
+        card.append(ctrls);
+        if (p.estimated_delivery_date) {
+          const dDiff = Math.round((new Date(p.estimated_delivery_date) - now) / 86400000);
+          const statusRow = mk('div');
+          statusRow.style.cssText = 'text-align:center;margin-bottom:10px;font-size:13px;font-weight:800;color:#4c4a45;animation:item-in .3s ease';
+          statusRow.innerHTML = `${dDiff} ימים 🚚`;
+          card.append(statusRow);
+        }
+      }
       card.append(timelineWrap, recBtn);
       list.append(card);
     });
@@ -2290,10 +2291,6 @@ function buildDelivery(){
     frag.append(root);
   }
   
-  const helper = mk('div'); helper.style.cssText = 'margin-top:12px;font-size:11px;color:var(--t3);display:flex;gap:16px';
-  helper.innerHTML = `<span><b style="color:#2d9cdb">┃</b> היום</span> <span><b style="color:var(--red)">┃</b> תאריך לידה (יעד)</span> <span>💡 ערוך תאריכים משמאל</span>`;
-  frag.append(helper);
-
   return frag;
 }
 
