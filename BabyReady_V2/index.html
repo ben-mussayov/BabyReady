@@ -130,10 +130,11 @@ textarea{resize:vertical;min-height:72px;line-height:1.5}
 .products-content{flex:1;max-width:900px;min-width:0}
 
 @media(max-width:768px){
-  .products-layout{flex-direction:column;gap:16px}
-  .products-sidebar{width:100%;position:static;flex-direction:row;flex-wrap:wrap;padding-bottom:12px;gap:8px}
-  .products-sidebar .btn{width:auto !important;margin-bottom:0 !important;flex-shrink:0}
-  .pill-v{flex:0 0 auto;width:auto;padding:8px 16px;font-size:12px;border-radius:20px;white-space:nowrap}
+  .products-layout{flex-direction:column;gap:12px}
+  .products-sidebar{width:100%;position:static;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;padding-bottom:8px;gap:6px;scrollbar-width:none;-ms-overflow-style:none}
+  .products-sidebar::-webkit-scrollbar{display:none}
+  .products-sidebar .btn{width:auto !important;margin-bottom:0 !important;flex-shrink:0;padding:8px 12px;font-size:11px}
+  .pill-v{flex:0 0 auto;width:auto;padding:6px 12px;font-size:11px;border-radius:20px;white-space:nowrap}
 }
 
 .search-full{margin-bottom:20px;width:100%}
@@ -334,6 +335,12 @@ textarea{resize:vertical;min-height:72px;line-height:1.5}
   /* Professional Gantt Chart - Fixed RTL */
   .gantt-root{display:flex;background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);height:500px}
   .gantt-side{width:340px;flex-shrink:0;background:var(--s1);border-right:1.5px solid var(--brd);display:flex;flex-direction:column;z-index:10;box-shadow:-4px 0 10px rgba(0,0,0,0.05)}
+  @media(max-width:680px){
+    .gantt-side{width:150px}
+    .gs-cell{padding:6px 8px;gap:4px}
+    .gs-name{font-size:11px}
+    .gs-date-inp{padding:3px 4px;font-size:10px}
+  }
   .gantt-main{flex:1;overflow-x:auto;position:relative;background:#fdfdfd;display:flex;flex-direction:column}
   
   .gantt-row{display:flex;height:95px;border-bottom:1px solid var(--brd);align-items:center;transition:background 0.2s}
