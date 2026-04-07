@@ -1085,46 +1085,15 @@ function buildProductsTab(){
   const frag = document.createDocumentFragment();
   const layout = mk('div', 'products-layout');
   
-  // ─── Filter Drawer (Mobile) ───
+  // ─── Mobile Header (Add only) ───
   if(window.innerWidth <= 768) {
-    const mobileFilters = mk('div', 'fbar');
-    mobileFilters.style.cssText = 'justify-content:space-between;padding:8px 12px;margin-bottom:15px';
+    const mobileHeader = mk('div');
+    mobileHeader.style.cssText = 'display:flex;justify-content:flex-start;padding:0 12px 15px 12px';
     
-    const filterBtn = mkBtn('סנן', 'bs bsm', () => {
-      const d = mk('div');
-      
-      const hU = mk('div', 'drawer-section-title'); hU.textContent = 'עדיפות';
-      const uWrap = mk('div'); uWrap.style.cssText = 'display:flex;flex-direction:column;gap:8px;margin-bottom:20px';
-      [['all','הכל'],['critical','🔴 קריטי'],['high','🟠 דחוף'],['medium','🟡 בינוני'],['low','🟢 יכול לחכות'],['done','✓ נקנה']].forEach(([v,l])=>{
-        const p = mk('div', 'pill-v p-' + v + (S.filterU === v ? ' on' : ''));
-        p.textContent = l;
-        p.onclick = () => { S.filterU = v; closeDrawer(); renderMain(); }; 
-        uWrap.append(p);
-      });
-
-      const hC = mk('div', 'drawer-section-title'); hC.textContent = 'קטגוריות';
-      const cWrap = mk('div'); cWrap.style.cssText = 'display:flex;flex-direction:column;gap:5px';
-      
-      // All Categories option
-      const allCat = mk('div', 'pill-v' + (S.filterC === 'all' ? ' on' : ''));
-      allCat.textContent = '🏷️ כל הקטגוריות';
-      allCat.onclick = () => { S.filterC = 'all'; closeDrawer(); renderMain(); };
-      cWrap.append(allCat);
-
-      CATS.forEach(c => {
-        const p = mk('div', 'pill-v' + (S.filterC === c.id ? ' on' : ''));
-        p.textContent = (c.icon || '📦') + ' ' + (c.he || c.id);
-        p.onclick = () => { S.filterC = c.id; closeDrawer(); renderMain(); };
-        cWrap.append(p);
-      });
-      
-      d.append(hU, uWrap, hC, cWrap);
-      openDrawer('סינון מוצרים', d);
-    });
-    
-    const addBtn = mkBtn('+ הוסף', 'bp bsm', openAddItemModal);
-    mobileFilters.append(filterBtn, addBtn);
-    frag.append(mobileFilters);
+    const addBtn = mkBtn('+ הוסף מוצר ✨', 'bp bsm', openAddItemModal);
+    addBtn.style.padding = '8px 18px';
+    mobileHeader.append(addBtn);
+    frag.append(mobileHeader);
   }
 
   // ─── Sidebar (Desktop) ───
