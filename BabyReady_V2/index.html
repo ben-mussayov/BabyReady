@@ -131,10 +131,7 @@ textarea{resize:vertical;min-height:72px;line-height:1.5}
 
 @media(max-width:768px){
   .products-layout{flex-direction:column;gap:12px}
-  .products-sidebar{width:100%;position:static;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;padding-bottom:8px;gap:6px;scrollbar-width:none;-ms-overflow-style:none}
-  .products-sidebar::-webkit-scrollbar{display:none}
-  .products-sidebar .btn{width:auto !important;margin-bottom:0 !important;flex-shrink:0;padding:8px 12px;font-size:11px}
-  .pill-v{flex:0 0 auto;width:auto;padding:6px 12px;font-size:11px;border-radius:20px;white-space:nowrap}
+  .products-sidebar{display:none}
 }
 
 .search-full{margin-bottom:20px;width:100%}
@@ -247,6 +244,15 @@ textarea{resize:vertical;min-height:72px;line-height:1.5}
 .admin-table th{background:var(--s2);padding:9px 11px;text-align:right;font-weight:700;border-bottom:2px solid var(--brd);color:var(--t2);text-transform:uppercase;font-size:10px;letter-spacing:.4px}
 .admin-table td{padding:8px 11px;border-bottom:1px solid var(--brd);vertical-align:middle}
 .admin-table tr:hover td{background:var(--s2)}
+
+/* ─── Drawer Component ─── */
+.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);backdrop-filter:blur(3px);z-index:2000;opacity:0;visibility:hidden;transition:all .3s ease}
+.drawer-overlay.open{opacity:1;visibility:visible}
+.drawer{position:fixed;top:0;left:-320px;width:300px;height:100%;background:var(--surf);z-index:2001;box-shadow:10px 0 30px rgba(0,0,0,0.1);transition:left .3s cubic-bezier(0.4, 0, 0.2, 1);display:flex;flex-direction:column;padding:24px;overflow-y:auto}
+.drawer.open{left:0}
+.drawer-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;border-bottom:1px solid var(--brd);padding-bottom:12px}
+.drawer-title{font-size:18px;font-weight:800;color:var(--grn)}
+.drawer-section-title{font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;margin-top:20px;border-bottom:1px solid var(--s3);padding-bottom:5px}
 
 /* ─── Modal ─── */
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)}
@@ -731,6 +737,31 @@ async function loadEvalCart(){
   S.evalCart = data || [];
 }
 
+function openDrawer(title, content) {
+  closeDrawer(); // Ensure only one drawer is open
+  const overlay = mk('div', 'drawer-overlay');
+  const drawer = mk('div', 'drawer');
+  overlay.onclick = closeDrawer;
+  
+  const hdr = mk('div', 'drawer-hdr');
+  hdr.innerHTML = `<div class="drawer-title">${title}</div><div style="cursor:pointer;font-size:20px;padding:5px" onclick="closeDrawer()">✕</div>`;
+  
+  drawer.append(hdr, content);
+  document.body.append(overlay, drawer);
+  
+  setTimeout(() => {
+    overlay.classList.add('open');
+    drawer.classList.add('open');
+  }, 10);
+}
+
+function closeDrawer() {
+  const o = document.querySelector('.drawer-overlay');
+  const d = document.querySelector('.drawer');
+  if(o) { o.classList.remove('open'); setTimeout(() => o.remove(), 300); }
+  if(d) { d.classList.remove('open'); setTimeout(() => d.remove(), 300); }
+}
+
 async function saveEvalItem(itemId, fields){
   const existing = S.evalCart.find(e => e.user_item_id === itemId);
   if(existing){
@@ -1051,7 +1082,49 @@ function buildProductsTab(){
   const frag = document.createDocumentFragment();
   const layout = mk('div', 'products-layout');
   
-  // ─── Sidebar (Left) ───
+  // ─── Filter Drawer (Mobile) ───
+  if(window.innerWidth <= 768) {
+    const mobileFilters = mk('div', 'fbar');
+    mobileFilters.style.cssText = 'justify-content:space-between;padding:8px 12px;margin-bottom:15px';
+    
+    const filterBtn = mkBtn('🔍 פילטור וחיפוש', 'bs bsm', () => {
+      const d = mk('div');
+      
+      const hU = mk('div', 'drawer-section-title'); hU.textContent = 'עדיפות';
+      const uWrap = mk('div'); uWrap.style.cssText = 'display:flex;flex-direction:column;gap:8px;margin-bottom:20px';
+      [['all','הכל'],['critical','🔴 קריטי'],['high','🟠 דחוף'],['medium','🟡 בינוני'],['low','🟢 יכול לחכות'],['done','✓ נקנה']].forEach(([v,l])=>{
+        const p = mk('div', 'pill-v p-' + v + (S.filterU === v ? ' on' : ''));
+        p.textContent = l;
+        p.onclick = () => { S.filterU = v; closeDrawer(); renderMain(); }; 
+        uWrap.append(p);
+      });
+
+      const hC = mk('div', 'drawer-section-title'); hC.textContent = 'קטגוריות';
+      const cWrap = mk('div'); cWrap.style.cssText = 'display:flex;flex-direction:column;gap:5px';
+      
+      // All Categories option
+      const allCat = mk('div', 'pill-v' + (S.filterC === 'all' ? ' on' : ''));
+      allCat.textContent = '🏷️ כל הקטגוריות';
+      allCat.onclick = () => { S.filterC = 'all'; closeDrawer(); renderMain(); };
+      cWrap.append(allCat);
+
+      CATS.forEach(c => {
+        const p = mk('div', 'pill-v' + (S.filterC === c.id ? ' on' : ''));
+        p.textContent = (c.icon || '📦') + ' ' + (c.he || c.id);
+        p.onclick = () => { S.filterC = c.id; closeDrawer(); renderMain(); };
+        cWrap.append(p);
+      });
+      
+      d.append(hU, uWrap, hC, cWrap);
+      openDrawer('סינון מוצרים', d);
+    });
+    
+    const addBtn = mkBtn('+ הוסף', 'bp bsm', openAddItemModal);
+    mobileFilters.append(filterBtn, addBtn);
+    frag.append(mobileFilters);
+  }
+
+  // ─── Sidebar (Desktop) ───
   const sidebar = mk('div', 'products-sidebar');
   
   const btnAdd = mkBtn('+ הוספת פריט', 'bp bsm', openAddItemModal);
@@ -1973,124 +2046,209 @@ function buildDelivery(){
     frag.append(e); return frag;
   }
 
-  const root = mk('div', 'gantt-root');
-  const side = mk('div', 'gantt-side');
-  const sh = mk('div', 'gantt-row gantt-h-row');
-  sh.innerHTML = `<div class="gs-cell" style="font-weight:800;font-size:11px;color:var(--t2)">פריטים וניהול הגעה</div>`;
-  side.append(sh);
-  
-  const main = mk('div', 'gantt-main');
-  const th = mk('div', 'gantt-row gantt-h-row');
-  th.style.width = (totalDays * 5) + 'px'; 
-  
-  for(let d = new Date(startDate); d <= endDate; d.setMonth(d.getMonth() + 1)) {
-    const mCell = mk('div', 'gt-cell');
-    mCell.innerHTML = `<div class="gt-month-lbl">${d.toLocaleDateString('he-IL',{month:'long',year:'2-digit'})}</div>`;
-    th.append(mCell);
-  }
-  main.append(th);
-  
-  items.sort((a,b) => new Date(a.created_at) - new Date(b.created_at)).forEach(p => {
-    const cat = getCat(p.category_id);
-    const evalInfo = S.evalCart.find(e => e.user_item_id === p.id);
-    const storeName = evalInfo ? (STORES[evalInfo.selected_store_id]?.name || evalInfo.selected_store_id) : 'הוזמן';
+  if(window.innerWidth <= 680) {
+    const list = mk('div');
+    list.style.cssText = 'display:flex;flex-direction:column;gap:16px;margin-top:10px';
     
-    // Sidebar Cell
-    const sRow = mk('div', 'gantt-row' + (p.purchased ? ' is-purchased' : ''));
-    const sCell = mk('div', 'gs-cell');
-    
-    const top = mk('div', 'gs-info');
-    const del = mk('div', 'gs-del'); del.innerHTML = '🗑️';
-    del.onclick = async () => {
-      if(!confirm('להסיר פריט זה מרשימת המשלוחים?')) return;
-      await sb.from('user_items').update({ is_ordered: false, purchased: false }).eq('id', p.id);
-      await loadItems(); renderDash();
-    };
-    const name = p.product_models ? (p.product_models.brands?.name + ' ' + p.product_models.model_name) : (p.custom_name || cat.he);
-    top.innerHTML = `<div class="gs-name" title="${name}">${cat.icon} ${name}</div>
-                      <div class="gs-sub">${storeName}</div>`;
-    top.prepend(del);
-    
-    const ctrls = mk('div', 'gs-ctrls');
-    
-    const ordGrp = mk('div'); ordGrp.style.cssText='display:flex;flex-direction:column;gap:1px;flex:1';
-    const ordLbl = mk('div'); ordLbl.textContent='תאריך הזמנה:'; ordLbl.style.fontSize='8px'; ordLbl.style.color='var(--t3)';
-    const ordInp = mk('input', 'gs-date-inp'); ordInp.type = 'date'; ordInp.value = p.ordered_at || '';
-    ordInp.onchange = async () => {
-      await sb.from('user_items').update({ ordered_at: ordInp.value }).eq('id', p.id);
-      p.ordered_at = ordInp.value; renderDash();
-    };
-    ordGrp.append(ordLbl, ordInp);
+    items.sort((a,b) => new Date(a.created_at) - new Date(b.created_at)).forEach(p => {
+      const cat = getCat(p.category_id);
+      const evalInfo = S.evalCart.find(e => e.user_item_id === p.id);
+      const storeName = evalInfo ? (STORES[evalInfo.selected_store_id]?.name || evalInfo.selected_store_id) : 'הוזמן';
+      const name = p.product_models ? (p.product_models.brands?.name + ' ' + p.product_models.model_name) : (p.custom_name || cat.he);
 
-    const devGrp = mk('div'); devGrp.style.cssText='display:flex;flex-direction:column;gap:1px;flex:1';
-    const devLbl = mk('div'); devLbl.textContent='צפי הגעה:'; devLbl.style.fontSize='8px'; devLbl.style.color='var(--t3)';
-    const devInp = mk('input', 'gs-date-inp'); devInp.type = 'date'; devInp.value = p.estimated_delivery_date || '';
-    devInp.onchange = async () => {
-      await sb.from('user_items').update({ estimated_delivery_date: devInp.value }).eq('id', p.id);
-      p.estimated_delivery_date = devInp.value; renderDash();
-    };
-    devGrp.append(devLbl, devInp);
-    
-    const recBtn = mkBtn('✓', 'bp bsm bico', async () => {
-      if(!confirm('האם הפריט התקבל?')) return;
-      await sb.from('user_items').update({ purchased: true, purchased_at: new Date().toISOString() }).eq('id', p.id);
-      p.purchased = true; renderDash();
-    });
-    
-    if(p.purchased) {
-      recBtn.innerHTML = '↺'; recBtn.title = 'בטל סימון כהתקבל'; recBtn.className = 'btn bg bsm bico';
-      recBtn.onclick = async () => {
-        if(!confirm('לבטל סימון כהתקבל?')) return;
-        await sb.from('user_items').update({ purchased: false, purchased_at: null }).eq('id', p.id);
-        p.purchased = false; renderDash();
+      const card = mk('div', 'card');
+      card.style.padding = '16px';
+      card.style.animation = 'item-in .2s ease';
+      
+      const top = mk('div'); top.style.cssText = 'display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px';
+      
+      const info = mk('div');
+      info.innerHTML = `<div style="font-size:15px;font-weight:800">${cat.icon} ${name}</div>
+                        <div style="font-size:12px;color:var(--t2);font-weight:600">${storeName}</div>`;
+      
+      const del = mkBtn('🗑️', 'bg bsm', async () => {
+        if(!confirm('להסיר?')) return;
+        await sb.from('user_items').update({ is_ordered: false, purchased: false }).eq('id', p.id);
+        await loadItems(); renderDash();
+      });
+      top.append(info, del);
+      
+      const ctrls = mk('div'); ctrls.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px';
+      
+      const ordGrp = mk('div');
+      ordGrp.innerHTML = `<div class="label-sm" style="margin-bottom:4px">הוזמן ב-</div>`;
+      const ordInp = mk('input'); ordInp.type = 'date'; ordInp.value = p.ordered_at || '';
+      ordInp.onchange = async () => { 
+        await sb.from('user_items').update({ ordered_at: ordInp.value }).eq('id', p.id); 
+        p.ordered_at = ordInp.value; renderDash();
       };
-    } else {
-      recBtn.title = 'סמן כהתקבל';
-    }
+      ordGrp.append(ordInp);
 
-    ctrls.append(ordGrp, devGrp, recBtn);
-    sCell.append(top, ctrls);
-    sRow.append(sCell);
-    side.append(sRow);
-    
-    // Timeline Row
-    const tRow = mk('div', 'gantt-row' + (p.purchased ? ' is-purchased' : ''));
-    tRow.style.width = th.style.width;
-    const barArea = mk('div', 'gt-cell');
-    barArea.style.flex = '1'; barArea.style.border = 'none';
-    
-    if(p.purchased) {
-      const lbl = mk('div'); lbl.style.cssText='position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:16px;font-weight:900;color:rgba(76,175,80,0.25);letter-spacing:5px;pointer-events:none;white-space:nowrap';
-      lbl.textContent = 'התקבל • DELIVERED';
-      barArea.append(lbl);
-    }
+      const devGrp = mk('div');
+      devGrp.innerHTML = `<div class="label-sm" style="margin-bottom:4px">צפי הגעה</div>`;
+      const devInp = mk('input'); devInp.type = 'date'; devInp.value = p.estimated_delivery_date || '';
+      devInp.onchange = async () => { 
+        await sb.from('user_items').update({ estimated_delivery_date: devInp.value }).eq('id', p.id);
+        p.estimated_delivery_date = devInp.value; renderDash();
+      };
+      devGrp.append(devInp);
+      ctrls.append(ordGrp, devGrp);
 
-    const todayMarker = mk('div', 'gb-today-line'); todayMarker.style.right = getPct(now) + '%';
-    const dueMarker = mk('div', 'gb-due-line'); dueMarker.style.right = getPct(due) + '%';
-    barArea.append(todayMarker, dueMarker);
+      const timelineWrap = mk('div'); 
+      timelineWrap.style.cssText = 'position:relative;height:30px;background:var(--s2);border-radius:15px;margin-bottom:12px;overflow:hidden;border:1px solid var(--brd)';
+      
+      const todayMarker = mk('div'); todayMarker.style.cssText = `position:absolute;top:0;bottom:0;width:2px;background:rgba(0,100,255,0.2);z-index:3;right:${getPct(now)}%`;
+      const dueMarker = mk('div'); dueMarker.style.cssText = `position:absolute;top:0;bottom:0;width:2px;background:rgba(255,0,0,0.2);z-index:1;right:${getPct(due)}%`;
+      timelineWrap.append(todayMarker, dueMarker);
 
-    const orderDate = p.ordered_at ? new Date(p.ordered_at) : new Date(p.created_at);
-    const deliveryDate = p.estimated_delivery_date ? new Date(p.estimated_delivery_date) : null;
-    
-    const barRight = getPct(orderDate);
-    const barEnd = p.purchased ? getPct(new Date(p.purchased_at)) : (deliveryDate ? getPct(deliveryDate) : getPct(now));
-    const barWidth = Math.max(3, Math.abs(barEnd - barRight));
-    
-    if(!p.purchased) {
-      const bar = mk('div', 'gb-bar pending');
+      const orderDate = p.ordered_at ? new Date(p.ordered_at) : new Date(p.created_at);
+      const deliveryDate = p.estimated_delivery_date ? new Date(p.estimated_delivery_date) : null;
+      const barRight = getPct(orderDate);
+      const barEnd = p.purchased ? getPct(new Date(p.purchased_at)) : (deliveryDate ? getPct(deliveryDate) : getPct(now));
+      const barWidth = Math.max(5, Math.abs(barEnd - barRight));
+
+      const bar = mk('div', 'gb-bar' + (p.purchased ? '' : ' pending'));
       bar.style.right = Math.min(barRight, barEnd) + '%'; 
       bar.style.width = barWidth + '%';
+      bar.style.height = '100%'; bar.style.borderRadius = '0';
+      if(p.purchased) bar.style.background = 'var(--grn)';
+      
+      if(deliveryDate) bar.innerHTML = `<span style="font-size:9px">🚚 ${deliveryDate.toLocaleDateString('he-IL',{month:'numeric',day:'numeric'})}</span>`;
+      else bar.innerHTML = `<span style="font-size:9px">⏳ בדרך</span>`;
+      
+      timelineWrap.append(bar);
+
+      const recBtn = mkBtn(p.purchased ? '↺ בטל סימון כהתקבל' : '✓ הפריט התקבל', p.purchased ? 'bs bfw' : 'bp bfw', async () => {
+        const newState = !p.purchased;
+        await sb.from('user_items').update({ purchased: newState, purchased_at: newState ? new Date().toISOString() : null }).eq('id', p.id);
+        p.purchased = newState; renderDash();
+      });
+
+      card.append(top, ctrls, timelineWrap, recBtn);
+      list.append(card);
+    });
     
-      if(deliveryDate) bar.innerHTML = `🚚 צפי: ${deliveryDate.toLocaleDateString('he-IL',{month:'numeric',day:'numeric'})}`;
-      else bar.innerHTML = `⏳ בדרך`;
-      barArea.append(bar);
+    frag.append(list);
+  } else {
+    const root = mk('div', 'gantt-root');
+    const side = mk('div', 'gantt-side');
+    const sh = mk('div', 'gantt-row gantt-h-row');
+    sh.innerHTML = `<div class="gs-cell" style="font-weight:800;font-size:11px;color:var(--t2)">פריטים וניהול הגעה</div>`;
+    side.append(sh);
+    
+    const main = mk('div', 'gantt-main');
+    const th = mk('div', 'gantt-row gantt-h-row');
+    th.style.width = (totalDays * 5) + 'px'; 
+    
+    for(let d = new Date(startDate); d <= endDate; d.setMonth(d.getMonth() + 1)) {
+      const mCell = mk('div', 'gt-cell');
+      mCell.innerHTML = `<div class="gt-month-lbl">${d.toLocaleDateString('he-IL',{month:'long',year:'2-digit'})}</div>`;
+      th.append(mCell);
     }
-    tRow.append(barArea);
-    main.append(tRow);
-  });
-  
-  root.append(main, side); 
-  frag.append(root);
+    main.append(th);
+    
+    items.sort((a,b) => new Date(a.created_at) - new Date(b.created_at)).forEach(p => {
+      const cat = getCat(p.category_id);
+      const evalInfo = S.evalCart.find(e => e.user_item_id === p.id);
+      const storeName = evalInfo ? (STORES[evalInfo.selected_store_id]?.name || evalInfo.selected_store_id) : 'הוזמן';
+      
+      // Sidebar Cell
+      const sRow = mk('div', 'gantt-row' + (p.purchased ? ' is-purchased' : ''));
+      const sCell = mk('div', 'gs-cell');
+      
+      const top = mk('div', 'gs-info');
+      const del = mk('div', 'gs-del'); del.innerHTML = '🗑️';
+      del.onclick = async () => {
+        if(!confirm('להסיר פריט זה מרשימת המשלוחים?')) return;
+        await sb.from('user_items').update({ is_ordered: false, purchased: false }).eq('id', p.id);
+        await loadItems(); renderDash();
+      };
+      const name = p.product_models ? (p.product_models.brands?.name + ' ' + p.product_models.model_name) : (p.custom_name || cat.he);
+      top.innerHTML = `<div class="gs-name" title="${name}">${cat.icon} ${name}</div>
+                        <div class="gs-sub">${storeName}</div>`;
+      top.prepend(del);
+      
+      const ctrls = mk('div', 'gs-ctrls');
+      
+      const ordGrp = mk('div'); ordGrp.style.cssText='display:flex;flex-direction:column;gap:1px;flex:1';
+      const ordLbl = mk('div'); ordLbl.textContent='תאריך הזמנה:'; ordLbl.style.fontSize='8px'; ordLbl.style.color='var(--t3)';
+      const ordInp = mk('input', 'gs-date-inp'); ordInp.type = 'date'; ordInp.value = p.ordered_at || '';
+      ordInp.onchange = async () => {
+        await sb.from('user_items').update({ ordered_at: ordInp.value }).eq('id', p.id);
+        p.ordered_at = ordInp.value; renderDash();
+      };
+      ordGrp.append(ordLbl, ordInp);
+
+      const devGrp = mk('div'); devGrp.style.cssText='display:flex;flex-direction:column;gap:1px;flex:1';
+      const devLbl = mk('div'); devLbl.textContent='צפי הגעה:'; devLbl.style.fontSize='8px'; devLbl.style.color='var(--t3)';
+      const devInp = mk('input', 'gs-date-inp'); devInp.type = 'date'; devInp.value = p.estimated_delivery_date || '';
+      devInp.onchange = async () => {
+        await sb.from('user_items').update({ estimated_delivery_date: devInp.value }).eq('id', p.id);
+        p.estimated_delivery_date = devInp.value; renderDash();
+      };
+      devGrp.append(devLbl, devInp);
+      
+      const recBtn = mkBtn('✓', 'bp bsm bico', async () => {
+        if(!confirm('האם הפריט התקבל?')) return;
+        await sb.from('user_items').update({ purchased: true, purchased_at: new Date().toISOString() }).eq('id', p.id);
+        p.purchased = true; renderDash();
+      });
+      
+      if(p.purchased) {
+        recBtn.innerHTML = '↺'; recBtn.title = 'בטל סימון כהתקבל'; recBtn.className = 'btn bg bsm bico';
+        recBtn.onclick = async () => {
+          if(!confirm('לבטל סימון כהתקבל?')) return;
+          await sb.from('user_items').update({ purchased: false, purchased_at: null }).eq('id', p.id);
+          p.purchased = false; renderDash();
+        };
+      } else {
+        recBtn.title = 'סמן כהתקבל';
+      }
+
+      ctrls.append(ordGrp, devGrp, recBtn);
+      sCell.append(top, ctrls);
+      sRow.append(sCell);
+      side.append(sRow);
+      
+      // Timeline Row
+      const tRow = mk('div', 'gantt-row' + (p.purchased ? ' is-purchased' : ''));
+      tRow.style.width = th.style.width;
+      const barArea = mk('div', 'gt-cell');
+      barArea.style.flex = '1'; barArea.style.border = 'none';
+      
+      if(p.purchased) {
+        const lbl = mk('div'); lbl.style.cssText='position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:16px;font-weight:900;color:rgba(76,175,80,0.25);letter-spacing:5px;pointer-events:none;white-space:nowrap';
+        lbl.textContent = 'התקבל • DELIVERED';
+        barArea.append(lbl);
+      }
+
+      const todayMarker = mk('div', 'gb-today-line'); todayMarker.style.right = getPct(now) + '%';
+      const dueMarker = mk('div', 'gb-due-line'); dueMarker.style.right = getPct(due) + '%';
+      barArea.append(todayMarker, dueMarker);
+
+      const orderDate = p.ordered_at ? new Date(p.ordered_at) : new Date(p.created_at);
+      const deliveryDate = p.estimated_delivery_date ? new Date(p.estimated_delivery_date) : null;
+      
+      const barRight = getPct(orderDate);
+      const barEnd = p.purchased ? getPct(new Date(p.purchased_at)) : (deliveryDate ? getPct(deliveryDate) : getPct(now));
+      const barWidth = Math.max(3, Math.abs(barEnd - barRight));
+      
+      if(!p.purchased) {
+        const bar = mk('div', 'gb-bar pending');
+        bar.style.right = Math.min(barRight, barEnd) + '%'; 
+        bar.style.width = barWidth + '%';
+      
+        if(deliveryDate) bar.innerHTML = `🚚 צפי: ${deliveryDate.toLocaleDateString('he-IL',{month:'numeric',day:'numeric'})}`;
+        else bar.innerHTML = `⏳ בדרך`;
+        barArea.append(bar);
+      }
+      tRow.append(barArea);
+      main.append(tRow);
+    });
+    
+    root.append(main, side); 
+    frag.append(root);
+  }
   
   const helper = mk('div'); helper.style.cssText = 'margin-top:12px;font-size:11px;color:var(--t3);display:flex;gap:16px';
   helper.innerHTML = `<span><b style="color:#2d9cdb">┃</b> היום</span> <span><b style="color:var(--red)">┃</b> תאריך לידה (יעד)</span> <span>💡 ערוך תאריכים משמאל</span>`;
