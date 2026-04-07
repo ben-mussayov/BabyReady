@@ -955,14 +955,10 @@ function renderDash(){
 
   // Sidebar Header
   const sbTop=mk('div','sb-top');
-  sbTop.style.cssText = 'display:flex;align-items:center;justify-content:flex-end;gap:12px;padding:12px 16px;cursor:pointer;color:#1c1a17';
-  
-  const sbTxt=mk('span','sb-top-text'); 
-  sbTxt.textContent='BabyReady';
-  sbTxt.style.cssText = 'font-size:18px;font-weight:900;color:#1c1a17;font-family:"Outfit","Heebo",sans-serif';
+  sbTop.style.cssText = 'display:flex;align-items:center;justify-content:flex-end;padding:12px 16px;cursor:pointer;color:#1c1a17';
   
   const sbToggle=mk('div','sb-toggle'); sbToggle.textContent='☰';
-  sbToggle.style.cssText = 'font-size:20px;line-height:1';
+  sbToggle.style.cssText = 'font-size:24px;line-height:1';
   
   sbTop.onclick=()=>{
     S.sidebarExpanded = !S.sidebarExpanded;
@@ -970,7 +966,7 @@ function renderDash(){
     else sbNode.classList.remove('expanded');
   };
   
-  sbTop.append(sbTxt, sbToggle);
+  sbTop.append(sbToggle);
   sbNode.append(sbTop);
 
   // Sidebar Menu
