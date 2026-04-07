@@ -1085,14 +1085,28 @@ function buildProductsTab(){
   const frag = document.createDocumentFragment();
   const layout = mk('div', 'products-layout');
   
-  // ─── Mobile Header (Add only) ───
+  // ─── Mobile Header (Add & Urgency Filter) ───
   if(window.innerWidth <= 768) {
     const mobileHeader = mk('div');
-    mobileHeader.style.cssText = 'display:flex;justify-content:flex-start;padding:0 12px 15px 12px';
+    mobileHeader.style.cssText = 'padding:0 12px 15px 12px;display:flex;flex-direction:column;gap:12px';
     
+    // Line 1: Add Button
+    const addRow = mk('div'); addRow.style.cssText = 'display:flex;justify-content:flex-start';
     const addBtn = mkBtn('+ הוסף מוצר ✨', 'bp bsm', openAddItemModal);
     addBtn.style.padding = '8px 18px';
-    mobileHeader.append(addBtn);
+    addRow.append(addBtn);
+
+    // Line 2: Urgency Filter Bar (Pills)
+    const filterRow = mk('div', 'fbar');
+    filterRow.style.cssText = 'flex-wrap:wrap;gap:8px;justify-content:flex-start;padding:4px 0';
+    [['all','הכל'],['critical','🔴 קריטי'],['high','🟠 דחוף'],['medium','🟡 בינוני'],['low','🟢 יכול לחכות'],['done','✓ נקנה']].forEach(([v,l])=>{
+      const p = mk('div', 'pill p-' + v + (S.filterU === v ? ' on' : ''));
+      p.textContent = l;
+      p.onclick = () => { S.filterU = v; renderMain(); }; 
+      filterRow.append(p);
+    });
+
+    mobileHeader.append(addRow, filterRow);
     frag.append(mobileHeader);
   }
 
