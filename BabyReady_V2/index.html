@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>BabyReady 🍼</title>
-<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&family=Outfit:wght@800;900&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -51,9 +51,11 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--tx);min-hei
 .sb-foot{padding:8px 0;border-top:1px solid var(--brd)}
 
 /* Topbar & Main */
-.topbar{background:var(--surf);border-bottom:1px solid var(--brd);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
-.tbl{font-size:17px;font-weight:800;color:var(--grn);display:flex;align-items:center;gap:8px;letter-spacing:-.3px}
-.tbr{display:flex;align-items:center;gap:8px}
+.topbar{background:var(--surf);border-bottom:1px solid var(--brd);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
+.tbl, .tbr{flex:1;display:flex;align-items:center}
+.tbl{justify-content:flex-start;font-size:16px;font-weight:800;color:var(--grn);gap:8px;letter-spacing:-.3px}
+.tbc{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:18px;font-weight:900;color:#1c1a17;display:flex;align-items:center;gap:6px;pointer-events:none;font-family:'Outfit',sans-serif}
+.tbr{justify-content:flex-end;font-size:13px;color:var(--t2);font-weight:700;gap:8px}
 .main{max-width:1100px;margin:0 auto;padding:20px;width:100%;transition:max-width 0.3s ease}
 .main.wide{max-width:100% !important}
 
@@ -275,11 +277,10 @@ textarea{resize:vertical;min-height:72px;line-height:1.5}
   .stats{grid-template-columns:repeat(2,1fr) !important}
   .r2{grid-template-columns:1fr}
   .main{padding:12px}
-  .topbar{padding:0 18px;height:60px;display:flex;align-items:center;justify-content:space-between;position:relative;background:var(--surf)}
-  .tbl, .tbr{flex:1;display:flex;align-items:center}
-  .tbl{justify-content:flex-start;font-size:14px;font-weight:600}
-  .tbc{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:18px;font-weight:900;color:#1c1a17;display:flex;align-items:center;gap:6px;pointer-events:none;font-family:'Outfit','Heebo',sans-serif}
-  .tbr{justify-content:flex-end;font-size:12px;color:var(--t2);font-weight:700}
+  .topbar{padding:0 14px;height:54px}
+  .tbl{font-size:14px}
+  .tbc{font-size:16px}
+  .tbr{font-size:12px}
   .card{padding:20px}
   .model-grid{grid-template-columns:1fr 1fr}
 }
