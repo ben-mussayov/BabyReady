@@ -1,0 +1,16 @@
+{
+  "name": "BabyReady",
+  "short_name": "BabyReady",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#f4f2ee",
+  "theme_color": "#1a5c3a",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
