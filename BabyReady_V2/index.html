@@ -490,6 +490,7 @@ let S = {
   clubs: [], 
   clubDiscounts: [],
   evalCart: [],
+  filterDel: 'all'
 };
 
 function getCat(id){ return CATS.find(c=>c.id===id)||{}; }
@@ -2047,10 +2048,24 @@ function buildDelivery(){
   }
 
   if(window.innerWidth <= 680) {
+    const fbar = mk('div', 'fbar');
+    fbar.style.cssText = 'padding:6px;justify-content:center;gap:10px;margin-bottom:15px';
+    [['all','📦 הכל'],['pending','⏳ בדרך'],['done','✅ הגיע']].forEach(([v,l])=>{
+      const p = mk('div', 'pill' + (S.filterDel === v ? ' on' : ''));
+      p.textContent = l;
+      p.onclick = () => { S.filterDel = v; renderMain(); };
+      fbar.append(p);
+    });
+    frag.append(fbar);
+    
+    let filtered = items;
+    if(S.filterDel === 'pending') filtered = items.filter(i => !i.purchased);
+    if(S.filterDel === 'done') filtered = items.filter(i => i.purchased);
+
     const list = mk('div');
     list.style.cssText = 'display:flex;flex-direction:column;gap:16px;margin-top:10px';
     
-    items.sort((a,b) => new Date(a.created_at) - new Date(b.created_at)).forEach(p => {
+    filtered.sort((a,b) => new Date(a.created_at) - new Date(b.created_at)).forEach(p => {
       const cat = getCat(p.category_id);
       const evalInfo = S.evalCart.find(e => e.user_item_id === p.id);
       const storeName = evalInfo ? (STORES[evalInfo.selected_store_id]?.name || evalInfo.selected_store_id) : 'הוזמן';
@@ -2112,17 +2127,16 @@ function buildDelivery(){
         const orderDate = p.ordered_at ? new Date(p.ordered_at) : new Date(p.created_at);
         const deliveryDate = p.estimated_delivery_date ? new Date(p.estimated_delivery_date) : null;
         
-        // Always full from the start (RTL right) up to Today
         bar.style.right = '0';
         bar.style.width = getPct(now) + '%';
         
-        const deliveryDatePct = deliveryDate ? getPct(deliveryDate) : getPct(now);
-        
         if(deliveryDate) {
+          const dDiff = Math.abs(Math.round((deliveryDate - now) / 86400000));
+          bar.innerHTML = `<span style="font-size:11px;font-weight:900;color:#fff">${dDiff} ימים 🚚</span>`;
+          
           const dText = mk('div');
-          dText.style.cssText = `position:absolute;top:50%;transform:translateY(-50%);right:${getPct(due)}%;margin-right:12px;font-size:11px;font-weight:800;color:var(--t2);white-space:nowrap;z-index:4`;
-          const dDiff = Math.round((deliveryDate - now) / 86400000);
-          dText.innerHTML = `${dDiff > 0 ? dDiff : ''} ${deliveryDate.getDate()}.${deliveryDate.getMonth()+1} 🚚`;
+          dText.style.cssText = `position:absolute;top:50%;transform:translateY(-50%);right:${getPct(due)}%;margin-right:12px;font-size:10px;font-weight:800;color:var(--t2);white-space:nowrap;z-index:4`;
+          dText.innerHTML = `${deliveryDate.getDate()}.${deliveryDate.getMonth()+1}`;
           timelineWrap.append(dText);
         }
         timelineWrap.append(dueMarker, bar);
@@ -2134,7 +2148,9 @@ function buildDelivery(){
         p.purchased = newState; renderDash();
       });
 
-      card.append(top, ctrls, timelineWrap, recBtn);
+      card.append(top);
+      if(!p.purchased) card.append(ctrls);
+      card.append(timelineWrap, recBtn);
       list.append(card);
     });
     
