@@ -2112,37 +2112,46 @@ function buildDelivery(){
       ctrls.append(ordGrp, devGrp);
 
       const timelineWrap = mk('div'); 
-      timelineWrap.style.cssText = 'position:relative;height:35px;background:var(--s2);border-radius:18px;margin-bottom:12px;overflow:hidden;border:1px solid var(--brd);display:flex;align-items:center';
+      timelineWrap.style.cssText = 'position:relative;height:35px;background:var(--s2);border-radius:18px;margin-bottom:12px;overflow:hidden;border:1px solid var(--brd);display:flex;align-items:center;justify-content:center';
       
-      const dueMarker = mk('div'); dueMarker.style.cssText = `position:absolute;top:0;bottom:0;width:2.5px;background:rgba(255,0,0,0.4);z-index:2;right:${getPct(due)}%`;
+      const dueMarker = mk('div'); dueMarker.style.cssText = `position:absolute;top:0;bottom:0;width:2.5px;background:rgba(255,0,0,0.5);z-index:2;right:${getPct(due)}%`;
 
       const bar = mk('div', 'gb-bar' + (p.purchased ? '' : ' pending'));
-      bar.style.height = '100%'; bar.style.borderRadius = '0'; bar.style.display = 'flex'; bar.style.alignItems = 'center'; bar.style.justifyContent = 'center';
+      bar.style.height = '100%'; bar.style.borderRadius = '0'; bar.style.position = 'absolute'; bar.style.right = '0';
       
       if(p.purchased) {
-        bar.style.right = '0';
         bar.style.width = '100%';
         bar.style.background = '#81c784'; // Premium Light Green
+        bar.style.zIndex = '3';
         bar.innerHTML = `<span style="font-size:13px;font-weight:900;color:#fff;letter-spacing:0.5px">Delivered - התקבל</span>`;
         timelineWrap.append(bar);
       } else {
         const orderDate = p.ordered_at ? new Date(p.ordered_at) : new Date(p.created_at);
         const deliveryDate = p.estimated_delivery_date ? new Date(p.estimated_delivery_date) : null;
         
-        // Progress: Time Elapsed since Order relative to Start of timeline
-        const startPct = getPct(orderDate);
-        const currentPct = getPct(now);
-        bar.style.right = startPct + '%';
-        bar.style.width = Math.max(5, (currentPct - startPct)) + '%';
+        // Progress: Absolute width on the 5-month timeline starting from 0% (right)
+        bar.style.width = getPct(now) + '%';
+        bar.style.zIndex = '1';
         
         if(deliveryDate) {
-          const dDiff = Math.abs(Math.round((deliveryDate - now) / 86400000));
-          bar.innerHTML = `<span style="font-size:11px;font-weight:900;color:#fff">${dDiff} ימים 🚚</span>`;
+          const dDiff = Math.round((deliveryDate - now) / 86400000);
+          
+          // Fixed center text in dark gray for contrast
+          const label = mk('div');
+          label.style.cssText = 'position:absolute;z-index:10;font-size:12px;font-weight:800;color:#4c4a45;pointer-events:none';
+          label.innerHTML = `${dDiff} ימים 🚚`;
+          timelineWrap.append(label);
+
+          // Delivery marker (The target point) - small indicator next to target
+          const dMarker = mk('div');
+          const dPct = getPct(deliveryDate);
+          dMarker.style.cssText = `position:absolute;top:0;bottom:0;width:2.5px;background:var(--grn);opacity:0.4;z-index:2;right:${dPct}%`;
           
           const dText = mk('div');
-          dText.style.cssText = `position:absolute;top:50%;transform:translateY(-50%);right:${getPct(due)}%;margin-right:12px;font-size:10px;font-weight:800;color:var(--t2);white-space:nowrap;z-index:4`;
+          dText.style.cssText = `position:absolute;bottom:-1px;right:${dPct}%;margin-right:4px;font-size:9px;font-weight:900;color:var(--grn);white-space:nowrap;z-index:4`;
           dText.innerHTML = `${deliveryDate.getDate()}.${deliveryDate.getMonth()+1}`;
-          timelineWrap.append(dText);
+          
+          timelineWrap.append(dMarker, dText);
         }
         timelineWrap.append(dueMarker, bar);
       }
