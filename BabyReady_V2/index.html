@@ -720,6 +720,23 @@ async function afterLogin(){
     });
   }
 
+  // Admin Self-Healing: Sync hardcoded stores to DB if missing
+  if (S.isAdmin) {
+    for (const id in STORES) {
+      if (!dbStores?.find(s => s.id === id)) {
+        const s = STORES[id];
+        await sb.from('stores').upsert({
+          id,
+          name_he: s.name,
+          name_en: s.name,
+          url: s.url,
+          logo_url: s.logo,
+          active: true
+        });
+      }
+    }
+  }
+
   // Fetch models from Supabase
   const { data: fetchedModels } = await sb.from('product_models')
     .select('*, brands(name)')
@@ -1580,13 +1597,30 @@ function openPriceModal(item, url, scraped = {}){
     
     saveBtn.disabled = true; saveBtn.textContent = 'שומר...';
 
+    const finalPriceSave = async (targetStoreId) => {
+      const {data:newPrice, error}=await sb.from('product_prices').insert({
+        model_id:item.model_id||null, user_item_id:item.id,
+        store_id:targetStoreId, price, currency:'ILS',
+        product_url:url, note:noteInp.value||null, added_by:S.user.id,
+        variant_image: sImg || null,
+        variant_note: sTitle || null
+      }).select().single();
+      
+      if(error){ toast(error.message,true); saveBtn.disabled=false; saveBtn.textContent='שמור מחיר'; return; }
+      
+      if(!item.product_prices) item.product_prices=[];
+      item.product_prices.push(newPrice);
+      item.product_prices.sort((a,b)=>(a.price||99999)-(b.price||99999));
+      S.openItemId = item.id;
+      closeModal(); swapRow(item); toast('מחיר נשמר!');
+    };
+
     if(store === 'other') {
       const sName = sNameInp.value.trim();
       const sUrl = sUrlInp.value.trim();
       if(!sName || !sUrl){ toast('חובה להזין שם חנות ואתר', true); saveBtn.disabled=false; saveBtn.textContent='שמור מחיר'; return; }
       
       const foundId = getStoreIdByUrl(sUrl);
-      
       if (foundId) {
         store = foundId;
       } else {
@@ -1602,25 +1636,21 @@ function openPriceModal(item, url, scraped = {}){
         STORES[derivedId] = { name: sName, url: sUrl };
         store = derivedId;
       }
+    } else if (STORES[store]) {
+      // Self-Healing Failsafe: Ensure selected store exists in DB before inserting price
+      const s = STORES[store];
+      await sb.from('stores').upsert({
+        id: store,
+        name_he: s.name,
+        name_en: s.name,
+        url: s.url,
+        logo_url: s.logo,
+        active: true
+      });
     }
 
     if(!store){ toast('בחר חנות',true); saveBtn.disabled=false; saveBtn.textContent='שמור מחיר'; return; }
-
-    const {data:newPrice,error}=await sb.from('product_prices').insert({
-      model_id:item.model_id||null, user_item_id:item.id,
-      store_id:store, price, currency:'ILS',
-      product_url:url, note:noteInp.value||null, added_by:S.user.id,
-      variant_image: sImg || null,
-      variant_note: sTitle || null
-    }).select().single();
-    
-    if(error){ toast(error.message,true); saveBtn.disabled=false; saveBtn.textContent='שמור מחיר'; return; }
-    
-    if(!item.product_prices) item.product_prices=[];
-    item.product_prices.push(newPrice);
-    item.product_prices.sort((a,b)=>(a.price||99999)-(b.price||99999));
-    S.openItemId = item.id;
-    closeModal(); swapRow(item); toast('מחיר נשמר!');
+    await finalPriceSave(store);
   });
   
   r.append(saveBtn);
