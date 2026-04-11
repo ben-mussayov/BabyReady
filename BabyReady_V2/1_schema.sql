@@ -62,7 +62,7 @@ create table if not exists product_models (
 create table if not exists product_prices (
   id              uuid primary key default uuid_generate_v4(),
   model_id        uuid references product_models(id) on delete cascade,
-  store_id        text references stores(id),
+  store_id        text references stores(id) on delete cascade,
   price           int not null,  -- ILS
   currency        text default 'ILS',
   product_url     text,          -- direct link to this product at this store
@@ -97,7 +97,7 @@ create table if not exists user_items (
   custom_name     text,     -- if not from model DB
   custom_url      text,     -- link user pasted
   custom_price    int,
-  store_id        text references stores(id),
+  store_id        text references stores(id) on delete cascade,
   notes           text,
   is_ordered      boolean default false,
   ordered_at      date,
@@ -112,7 +112,7 @@ create table if not exists user_items (
 create table if not exists user_price_contributions (
   id              uuid primary key default uuid_generate_v4(),
   model_id        uuid references product_models(id),
-  store_id        text references stores(id),
+  store_id        text references stores(id) on delete cascade,
   price           int not null,
   product_url     text,
   scraped_data    jsonb,   -- raw data from URL scrape

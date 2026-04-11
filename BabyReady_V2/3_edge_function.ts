@@ -29,6 +29,8 @@ interface ProductData {
 const STORE_ID_MAP: Record<string, string> = {
   "shilav.co.il": "shilav",
   "aglis.co.il": "aglis",
+  "agalease-baby.co.il": "aglis",
+  "agalease.co.il": "aglis",
   "babystar.co.il": "babystar",
   "motzetzim.co.il": "motzetzim",
   "motsesim.co.il": "motzetzim",

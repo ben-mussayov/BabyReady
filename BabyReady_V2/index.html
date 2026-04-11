@@ -506,6 +506,21 @@ let S = {
   filterDel: 'all'
 };
 
+function getStoreIdByUrl(url) {
+  if (!url || typeof url !== 'string') return null;
+  try {
+    const inputHostname = new URL(url).hostname.replace('www.', '').toLowerCase();
+    let foundId = Object.keys(STORES).find(k => {
+       try { return new URL(STORES[k].url).hostname.replace('www.', '').toLowerCase() === inputHostname; } catch(e) { return false; }
+    });
+    if (foundId) return foundId;
+    const legacyMap = {"agalis.co.il":"aglis","agalease-baby.co.il":"aglis","agalease.co.il":"aglis","shilav.co.il":"shilav","babystar.co.il":"babystar","motzetzim.co.il":"motzetzim","motsesim.co.il":"motzetzim"};
+    const legacyKey = Object.keys(legacyMap).find(k => inputHostname.includes(k));
+    if (legacyKey) return legacyMap[legacyKey];
+    return null;
+  } catch(e) { return null; }
+}
+
 function getCat(id){ return CATS.find(c=>c.id===id)||{}; }
 
 /* ═══════════════════════════════════════════════
@@ -1532,8 +1547,16 @@ function openPriceModal(item, url, scraped = {}){
 
   // Form Fields
   const storeSel=mkSel([['','-- בחר חנות --'],...Object.entries(STORES).map(([k,v])=>[k,v.name]), ['other', '+ חנות חדשה...']]);
-  if(STORES[sStoreId]) storeSel.value = sStoreId;
-  else storeSel.value = 'other';
+  
+  // Proactive "sweep": check if store already exists by URL
+  const identifiedStoreId = getStoreIdByUrl(url);
+  if (identifiedStoreId && STORES[identifiedStoreId]) {
+    storeSel.value = identifiedStoreId;
+  } else if (STORES[sStoreId]) {
+    storeSel.value = sStoreId;
+  } else {
+    storeSel.value = 'other';
+  }
 
   const priceInp=mkInp('number','מחיר ב-₪', sPrice);
   const noteInp=mkInp('text','הערה (אופציונלי)', sDesc ? sDesc.substring(0, 50) : '');
@@ -1562,16 +1585,12 @@ function openPriceModal(item, url, scraped = {}){
       const sUrl = sUrlInp.value.trim();
       if(!sName || !sUrl){ toast('חובה להזין שם חנות ואתר', true); saveBtn.disabled=false; saveBtn.textContent='שמור מחיר'; return; }
       
-      const inputHostname = new URL(sUrl).hostname.replace('www.', '').toLowerCase();
-      
-      let foundId = Object.keys(STORES).find(k => {
-         try { return new URL(STORES[k].url).hostname.replace('www.', '').toLowerCase() === inputHostname; } catch(e) { return false; }
-      });
+      const foundId = getStoreIdByUrl(sUrl);
       
       if (foundId) {
         store = foundId;
       } else {
-        const derivedId = inputHostname;
+        const derivedId = new URL(sUrl).hostname.replace('www.', '').toLowerCase();
         const { error: se } = await sb.from('stores').upsert({
           id: derivedId,
           name_he: sName,
@@ -1815,16 +1834,12 @@ async function scrapeNewModel(url, targetWrap, onSuccessCallback, preselectedCat
           const sUrl = storeSection.querySelector('input[type="url"]').value.trim();
           if(!sName || !sUrl){ toast('חובה להזין שם חנות ואת כתובת האתר שלה', true); return; }
           
-          const inputHostname = new URL(sUrl).hostname.replace('www.', '').toLowerCase();
-          
-          let foundId = Object.keys(STORES).find(k => {
-             try { return new URL(STORES[k].url).hostname.replace('www.', '').toLowerCase() === inputHostname; } catch(e) { return false; }
-          });
+          const foundId = getStoreIdByUrl(sUrl);
           
           if(foundId) {
             finalStoreId = foundId;
           } else {
-            finalStoreId = inputHostname;
+            finalStoreId = new URL(sUrl).hostname.replace('www.', '').toLowerCase();
             // Create store if not exists
             const storeLogo = pd.store_logo_url || '';
             await sb.from('stores').upsert({

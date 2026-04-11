@@ -28,7 +28,7 @@ create table if not exists user_eval_cart (
   id                uuid primary key default uuid_generate_v4(),
   user_id           uuid references profiles(id) on delete cascade,
   user_item_id      uuid references user_items(id) on delete cascade,
-  selected_store_id text references stores(id),
+  selected_store_id text references stores(id) on delete cascade,
   is_eilat          boolean default false,
   applied_club_id   text references buying_clubs(id),
   created_at        timestamptz default now(),
