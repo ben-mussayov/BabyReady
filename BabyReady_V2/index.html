@@ -1562,11 +1562,16 @@ function openPriceModal(item, url, scraped = {}){
       const sUrl = sUrlInp.value.trim();
       if(!sName || !sUrl){ toast('חובה להזין שם חנות ואתר', true); saveBtn.disabled=false; saveBtn.textContent='שמור מחיר'; return; }
       
-      const derivedId = sName.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const inputHostname = new URL(sUrl).hostname.replace('www.', '').toLowerCase();
       
-      if (STORES[derivedId]) {
-        store = derivedId;
+      let foundId = Object.keys(STORES).find(k => {
+         try { return new URL(STORES[k].url).hostname.replace('www.', '').toLowerCase() === inputHostname; } catch(e) { return false; }
+      });
+      
+      if (foundId) {
+        store = foundId;
       } else {
+        const derivedId = inputHostname;
         const { error: se } = await sb.from('stores').upsert({
           id: derivedId,
           name_he: sName,
@@ -1810,18 +1815,27 @@ async function scrapeNewModel(url, targetWrap, onSuccessCallback, preselectedCat
           const sUrl = storeSection.querySelector('input[type="url"]').value.trim();
           if(!sName || !sUrl){ toast('חובה להזין שם חנות ואת כתובת האתר שלה', true); return; }
           
-          const cleanUrl = new URL(sUrl).hostname.replace('www.', '').toLowerCase();
-          finalStoreId = cleanUrl.replace(/[^a-z0-9]/g, '');
-          // Create store if not exists
-          const storeLogo = pd.store_logo_url || '';
-          await sb.from('stores').upsert({
-            id: finalStoreId,
-            name_he: sName,
-            name_en: sName,
-            url: sUrl,
-            logo_url: storeLogo,
-            active: true
+          const inputHostname = new URL(sUrl).hostname.replace('www.', '').toLowerCase();
+          
+          let foundId = Object.keys(STORES).find(k => {
+             try { return new URL(STORES[k].url).hostname.replace('www.', '').toLowerCase() === inputHostname; } catch(e) { return false; }
           });
+          
+          if(foundId) {
+            finalStoreId = foundId;
+          } else {
+            finalStoreId = inputHostname;
+            // Create store if not exists
+            const storeLogo = pd.store_logo_url || '';
+            await sb.from('stores').upsert({
+              id: finalStoreId,
+              name_he: sName,
+              name_en: sName,
+              url: sUrl,
+              logo_url: storeLogo,
+              active: true
+            });
+          }
           
           // Sync with local STORES object for immediate UI update
           if (!STORES[finalStoreId]) {
@@ -2693,8 +2707,17 @@ function openAddStoreModal(onSaved){
         const sNameEn = nameEnInp.value.trim() || sName;
         if(!sName){ toast('חובה להזין שם חנות', true); return; }
         
-        const cleanUrl = new URL(url).hostname.replace('www.', '').toLowerCase();
-        const derivedId = cleanUrl.replace(/[^a-z0-9]/g, '');
+        const inputHostname = new URL(url).hostname.replace('www.', '').toLowerCase();
+        
+        let foundId = Object.keys(STORES).find(k => {
+           try { return new URL(STORES[k].url).hostname.replace('www.', '').toLowerCase() === inputHostname; } catch(e) { return false; }
+        });
+        
+        if (foundId) {
+          toast('חנות זו כבר קיימת במערכת', true);
+          return;
+        }
+        const derivedId = inputHostname;
         saveBtn.disabled = true;
         const { error: se } = await sb.from('stores').upsert({
           id: derivedId,
