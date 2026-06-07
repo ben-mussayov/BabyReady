@@ -1251,13 +1251,13 @@ function buildList(list){
     grouped[catId].push(item);
   });
   
-  // Sort category IDs so that PRI (Priority) items always appear first
+  // Sort category IDs by priority field, PRI categories always first
   const sortedCatIds = Object.keys(grouped).sort((a,b) => {
-    const aPri = PRI.includes(a);
-    const bPri = PRI.includes(b);
+    const aPri = PRI.includes(a), bPri = PRI.includes(b);
     if(aPri && !bPri) return -1;
     if(!aPri && bPri) return 1;
-    return 0;
+    const aCat = getCat(a), bCat = getCat(b);
+    return (aCat?.priority ?? 99) - (bCat?.priority ?? 99);
   });
   
   // Render each category accordion
@@ -1279,35 +1279,76 @@ function buildList(list){
     };
     
     const catTitle = mk('div', 'cat-title');
-    catTitle.style.cssText = 'display:flex;align-items:center;gap:12px';
+    catTitle.style.cssText = 'display:flex;align-items:center;gap:8px;flex:1;min-width:0';
     const textSpan = mk('span');
     textSpan.textContent = `${cat.icon} ${cat.he}`;
     catTitle.append(textSpan);
-    
+
+    // ─── Urgency dropdown ───
     if (cat.u) {
+      const urgWrap = mk('div');
+      urgWrap.style.cssText = 'position:relative;display:flex;align-items:center';
+
       const badge = urgBadge(cat.u);
-      badge.title = 'לחץ לשינוי דחיפות';
-      badge.style.cursor = 'pointer';
-      badge.onclick = async (e) => {
+
+      const urgDrop = mk('select');
+      urgDrop.style.cssText = 'position:absolute;opacity:0;width:100%;height:100%;top:0;right:0;cursor:pointer;font-size:13px';
+      [['critical','🔴 קריטי'],['high','🟠 דחוף'],['medium','🟡 בינוני'],['low','🟢 יכול לחכות']].forEach(([v,l]) => {
+        const o = document.createElement('option');
+        o.value = v; o.textContent = l;
+        if(v === cat.u) o.selected = true;
+        urgDrop.append(o);
+      });
+      urgDrop.onclick = e => e.stopPropagation();
+      urgDrop.onchange = async e => {
         e.stopPropagation();
-        const order = ['critical','high','medium','low'];
-        const next = order[(order.indexOf(cat.u) + 1) % order.length];
+        const next = urgDrop.value;
         await sb.from('categories').update({ urgency: next }).eq('id', catId);
         cat.u = next;
         refreshList();
         toast('דחיפות עודכנה: ' + UHE[next]);
       };
-      catTitle.append(badge);
+
+      urgWrap.append(badge, urgDrop);
+      catTitle.append(urgWrap);
     }
     
     const catCount = mk('span', 'cat-count');
     catCount.textContent = `(${catItems.length})`;
     catTitle.append(catCount);
+
+    // ─── Category reorder arrows ───
+    const catReorder = mk('div');
+    catReorder.style.cssText = 'display:flex;flex-direction:column;gap:1px;margin-left:4px';
+    ['up','down'].forEach(dir => {
+      const btn = mk('button');
+      btn.textContent = dir === 'up' ? '▲' : '▼';
+      btn.title = dir === 'up' ? 'הזז למעלה' : 'הזז למטה';
+      btn.style.cssText = 'width:18px;height:16px;font-size:8px;border:1px solid var(--brd2);border-radius:3px;background:var(--s2);cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;color:var(--t2)';
+      btn.onclick = async e => {
+        e.stopPropagation();
+        const allCats = CATS.slice().sort((a,b) => (a.priority||0) - (b.priority||0));
+        const idx = allCats.findIndex(c => c.id === catId);
+        const swapIdx = dir === 'up' ? idx - 1 : idx + 1;
+        if(swapIdx < 0 || swapIdx >= allCats.length) return;
+        const swapCat = allCats[swapIdx];
+        const myPri = cat.priority ?? idx;
+        const swapPri = swapCat.priority ?? swapIdx;
+        cat.priority = swapPri;
+        swapCat.priority = myPri;
+        await Promise.all([
+          sb.from('categories').update({ priority: cat.priority }).eq('id', catId),
+          sb.from('categories').update({ priority: swapCat.priority }).eq('id', swapCat.id),
+        ]);
+        refreshList();
+      };
+      catReorder.append(btn);
+    });
     
     const catChev = mk('span', 'cat-chev');
     catChev.textContent = '▼';
     
-    catHeader.append(catTitle, catChev);
+    catHeader.append(catTitle, catReorder, catChev);
     catAccordion.append(catHeader);
     
     const catBody = mk('div', 'cat-body');
@@ -1383,43 +1424,7 @@ function buildModelRow(item){
     S.items=S.items.filter(i=>i.id!==item.id);
     refreshList(); renderMain(); toast('הוסר');
   };
-
-  // ─── Reorder buttons ───
-  const reorderWrap = mk('div');
-  reorderWrap.style.cssText = 'display:flex;flex-direction:column;gap:2px';
-
-  const mkArrow = (dir) => {
-    const btn = mk('button','btn bg');
-    btn.textContent = dir === 'up' ? '↑' : '↓';
-    btn.title = dir === 'up' ? 'הזז למעלה' : 'הזז למטה';
-    btn.style.cssText = 'width:22px;height:22px;font-size:11px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:4px';
-    btn.onclick = async e => {
-      e.stopPropagation();
-      // Get all items in same category, sorted by current sort_order
-      const catItems = S.items
-        .filter(i => i.category_id === item.category_id)
-        .sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
-      const idx = catItems.findIndex(i => i.id === item.id);
-      const swapIdx = dir === 'up' ? idx - 1 : idx + 1;
-      if(swapIdx < 0 || swapIdx >= catItems.length) return;
-      const swapItem = catItems[swapIdx];
-      // Assign clean sequential sort_orders
-      const newOrder = item.sort_order ?? idx;
-      const swapOrder = swapItem.sort_order ?? swapIdx;
-      // Swap values
-      item.sort_order = swapOrder;
-      swapItem.sort_order = newOrder;
-      // Persist both
-      await Promise.all([
-        sb.from('user_items').update({ sort_order: item.sort_order }).eq('id', item.id),
-        sb.from('user_items').update({ sort_order: swapItem.sort_order }).eq('id', swapItem.id),
-      ]);
-      refreshList();
-    };
-    return btn;
-  };
-  reorderWrap.append(mkArrow('up'), mkArrow('down'));
-  acts.append(reorderWrap, delBtn); head.append(acts,chev);
+  acts.append(delBtn); head.append(acts,chev);
   head.onclick=()=>{
     row.classList.toggle('open');
     if(row.classList.contains('open')) {
