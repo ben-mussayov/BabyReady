@@ -2054,15 +2054,14 @@ async function scrapeNewModel(url, targetWrap, onSuccessCallback, preselectedCat
           const sUrl = storeSection.querySelector('input[type="url"]').value.trim();
           if(!sName || !sUrl){ toast('חובה להזין שם חנות ואת כתובת האתר שלה', true); return; }
           
+          const storeLogo = pd.store_logo_url || '';
           const foundId = getStoreIdByUrl(sUrl);
           
           if(foundId) {
             finalStoreId = foundId;
           } else {
-            finalStoreId = new URL(sUrl).hostname.replace('www.', '').toLowerCase();
-            // Create store if not exists
-            const storeLogo = pd.store_logo_url || '';
-            await sb.from('stores').upsert({
+            finalStoreId = new URL(sUrl).hostname.replace('www.', '').replace(/\./g, '_').toLowerCase();
+            const { error: storeErr } = await sb.from('stores').upsert({
               id: finalStoreId,
               name_he: sName,
               name_en: sName,
@@ -2070,15 +2069,12 @@ async function scrapeNewModel(url, targetWrap, onSuccessCallback, preselectedCat
               logo_url: storeLogo,
               active: true
             });
+            if(storeErr){ toast('שגיאה בשמירת החנות: ' + storeErr.message, true); return; }
           }
           
           // Sync with local STORES object for immediate UI update
           if (!STORES[finalStoreId]) {
-            STORES[finalStoreId] = {
-              name: sName,
-              url: sUrl,
-              logo: storeLogo
-            };
+            STORES[finalStoreId] = { name: sName, url: sUrl, logo: storeLogo };
           }
         }
 
