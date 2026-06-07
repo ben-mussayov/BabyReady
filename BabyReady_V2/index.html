@@ -1487,9 +1487,17 @@ function buildModelRow(item){
               variant_note: noteVal
             }).eq('id', p.id);
             if(error){ toast(error.message, true); return; }
-            // Update STORES logo in memory for this session
+            // Update STORES logo in memory and persist to DB
             if(logoVal && STORES[p.store_id]){
               STORES[p.store_id].logo = logoVal;
+              await sb.from('stores').upsert({
+                id: p.store_id,
+                name_he: STORES[p.store_id].name,
+                name_en: STORES[p.store_id].name,
+                url: STORES[p.store_id].url,
+                logo_url: logoVal,
+                active: true
+              });
             }
             p.variant_image = imgVal;
             p.variant_note = noteVal;
