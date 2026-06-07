@@ -292,9 +292,8 @@ textarea{resize:vertical;min-height:72px;line-height:1.5}
   .model-grid{grid-template-columns:1fr 1fr}
 }
 /* ─── Category Accordion ─── */
-.cat-accordion{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow);transition:margin-top .15s ease,box-shadow .15s}
-.cat-accordion.dragging{box-shadow:0 12px 32px rgba(0,0,0,0.25);border:2px solid var(--grn);z-index:999;position:relative;pointer-events:none}
-.cat-accordion.drag-over{margin-top:56px;transition:margin-top .15s ease}
+.cat-accordion{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow);transition:margin-top .15s ease}
+.cat-accordion.drag-over{margin-top:56px}
 .cat-drag-handle{cursor:grab;padding:0 8px 0 0;color:var(--t3);font-size:16px;line-height:1;user-select:none;flex-shrink:0}
 .cat-drag-handle:active{cursor:grabbing}
 .urg-badge-wrap{position:relative;display:inline-flex;align-items:center;border-radius:20px;transition:box-shadow .15s}
@@ -1338,53 +1337,56 @@ function buildList(list){
     catAccordion.dataset.catId = catId;
     dragHandle.addEventListener('pointerdown', e => {
       e.stopPropagation();
-      const list = catAccordion.parentElement;
-      const allAccordions = () => [...list.querySelectorAll('.cat-accordion')];
-      const startY = e.clientY;
-      const origRect = catAccordion.getBoundingClientRect();
-      const origIndex = allAccordions().indexOf(catAccordion);
-
-      // Lift the card
-      catAccordion.classList.add('dragging');
-      catAccordion.style.top = origRect.top + 'px';
-      catAccordion.style.left = origRect.left + 'px';
-      catAccordion.style.width = origRect.width + 'px';
+      e.preventDefault();
       dragHandle.setPointerCapture(e.pointerId);
 
-      let lastHovered = null;
+      const list = catAccordion.parentElement;
+      const getAccordions = () => [...list.querySelectorAll('.cat-accordion:not(.drag-clone)')];
+
+      // Snapshot positions before anything moves
+      const rect = catAccordion.getBoundingClientRect();
+
+      // Create a floating clone that follows the cursor
+      const clone = catAccordion.cloneNode(true);
+      clone.classList.add('drag-clone');
+      clone.style.cssText = `position:fixed;top:${rect.top}px;left:${rect.left}px;width:${rect.width}px;z-index:9999;pointer-events:none;box-shadow:0 12px 32px rgba(0,0,0,0.22);border:2px solid var(--grn);border-radius:var(--r);background:var(--surf);opacity:0.96;transform:scale(1.02);`;
+      document.body.append(clone);
+
+      // Dim original in place so space is preserved
+      catAccordion.style.opacity = '0.25';
+      catAccordion.style.pointerEvents = 'none';
+
+      let lastOver = null;
 
       const onMove = ev => {
-        const dy = ev.clientY - startY;
-        catAccordion.style.transform = `translateY(${dy}px) scale(1.02) rotate(-0.5deg)`;
+        // Clone follows cursor centered vertically
+        clone.style.top = (ev.clientY - rect.height / 2) + 'px';
 
-        // Find which card we're hovering over
-        allAccordions().forEach(acc => {
+        // Detect which accordion the cursor is over
+        let found = null;
+        getAccordions().forEach(acc => {
           if(acc === catAccordion) return;
           const r = acc.getBoundingClientRect();
-          const mid = r.top + r.height / 2;
-          if(ev.clientY > r.top && ev.clientY < r.bottom) {
-            if(lastHovered !== acc) {
-              if(lastHovered) lastHovered.classList.remove('drag-over');
-              acc.classList.add('drag-over');
-              lastHovered = acc;
-            }
-          }
+          if(ev.clientY >= r.top && ev.clientY <= r.bottom) found = acc;
         });
+
+        if(found !== lastOver) {
+          if(lastOver) lastOver.classList.remove('drag-over');
+          if(found) found.classList.add('drag-over');
+          lastOver = found;
+        }
       };
 
       const onUp = async ev => {
         dragHandle.removeEventListener('pointermove', onMove);
         dragHandle.removeEventListener('pointerup', onUp);
+        clone.remove();
+        catAccordion.style.opacity = '';
+        catAccordion.style.pointerEvents = '';
+        if(lastOver) lastOver.classList.remove('drag-over');
 
-        catAccordion.classList.remove('dragging');
-        catAccordion.style.transform = '';
-        catAccordion.style.top = '';
-        catAccordion.style.left = '';
-        catAccordion.style.width = '';
-
-        if(lastHovered) {
-          lastHovered.classList.remove('drag-over');
-          const targetId = lastHovered.dataset.catId;
+        if(lastOver) {
+          const targetId = lastOver.dataset.catId;
           const allCats = CATS.slice().sort((a,b) => (a.priority||0) - (b.priority||0));
           const fromIdx = allCats.findIndex(c => c.id === catId);
           const toIdx   = allCats.findIndex(c => c.id === targetId);
