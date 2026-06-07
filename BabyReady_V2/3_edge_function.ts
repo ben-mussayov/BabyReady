@@ -41,6 +41,7 @@ const STORE_ID_MAP: Record<string, string> = {
   "moradbaby.co.il": "moradbaby",
   "babylino.co.il": "babylino",
   "kochavnolad.co.il": "kochavnolad",
+  "silvercrossil.co.il": "silvercrossil",
 };
 
 // ─── Known brand names for fallback extraction ───
