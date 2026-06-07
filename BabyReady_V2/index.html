@@ -1459,7 +1459,50 @@ function buildModelRow(item){
       };
       priceRow.onmouseover = () => priceRow.style.background = 'var(--s3)';
       priceRow.onmouseout = () => priceRow.style.background = 'var(--s2)';
-      
+
+      // ─── Edit button: shown when image or logo is missing ───
+      if(!p.variant_image || !storeLogoData){
+        const editBtn = mk('button');
+        editBtn.textContent = '✏️';
+        editBtn.title = 'הוסף תמונה / לוגו ידנית';
+        editBtn.style.cssText = 'position:absolute;right:38px;width:24px;height:24px;border-radius:50%;background:var(--s3);border:1px solid var(--brd2);cursor:pointer;font-size:12px;line-height:1;padding:0;display:flex;align-items:center;justify-content:center';
+        editBtn.onclick = (e) => {
+          e.stopPropagation();
+          const d = mk('div');
+          const imgInp = mkInp('url', 'קישור לתמונת המוצר (jpg/png)', p.variant_image || '');
+          const logoInp = mkInp('url', 'קישור ללוגו החנות (jpg/png/svg)', STORES[p.store_id]?.logo || '');
+          const noteInp = mkInp('text', 'תיאור (אופציונלי)', p.variant_note && p.variant_note !== 'מוצר ידני' ? p.variant_note : '');
+          d.append(
+            mkFld('תמונת מוצר', [imgInp]),
+            mkFld('לוגו חנות', [logoInp]),
+            mkFld('תיאור / דגם ספציפי', [noteInp])
+          );
+          const saveBtn = mkBtn('שמור', 'bp bfw', async () => {
+            const imgVal = imgInp.value.trim() || null;
+            const logoVal = logoInp.value.trim() || null;
+            const noteVal = noteInp.value.trim() || null;
+            // Update price row in DB
+            const {error} = await sb.from('product_prices').update({
+              variant_image: imgVal,
+              variant_note: noteVal
+            }).eq('id', p.id);
+            if(error){ toast(error.message, true); return; }
+            // Update STORES logo in memory for this session
+            if(logoVal && STORES[p.store_id]){
+              STORES[p.store_id].logo = logoVal;
+            }
+            p.variant_image = imgVal;
+            p.variant_note = noteVal;
+            toast('עודכן בהצלחה!');
+            closeModal();
+            swapRow(item); renderMain();
+          });
+          d.append(saveBtn);
+          openModal('✏️ עריכת תמונה ולוגו', d);
+        };
+        priceRow.append(editBtn);
+      }
+
       priceRow.append(leftSide, priceVal, delBtn);
       pricesWrap.append(priceRow);
     });
