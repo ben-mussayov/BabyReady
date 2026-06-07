@@ -292,13 +292,13 @@ textarea{resize:vertical;min-height:72px;line-height:1.5}
   .model-grid{grid-template-columns:1fr 1fr}
 }
 /* ─── Category Accordion ─── */
-.cat-accordion{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow)}
-.cat-accordion.dragging{opacity:.5;border:2px dashed var(--grn)}
-.cat-accordion.drag-over{border:2px solid var(--grn);background:var(--gl)}
+.cat-accordion{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow);transition:margin-top .2s ease,transform .15s,box-shadow .15s}
+.cat-accordion.dragging{opacity:.9;transform:scale(1.02) rotate(-0.5deg);box-shadow:0 8px 28px rgba(0,0,0,0.22);border:2px solid var(--grn);z-index:50;position:relative}
+.cat-accordion.drag-over{margin-top:52px}
 .cat-drag-handle{cursor:grab;padding:0 8px 0 0;color:var(--t3);font-size:16px;line-height:1;user-select:none;flex-shrink:0}
 .cat-drag-handle:active{cursor:grabbing}
 .urg-badge-wrap{position:relative;display:inline-flex;align-items:center;border-radius:20px;transition:box-shadow .15s}
-.urg-badge-wrap:hover{box-shadow:0 0 0 3px rgba(0,0,0,0.12)}
+.urg-badge-wrap:hover{box-shadow:0 0 0 3px rgba(0,0,0,0.5)}
 .urg-badge-wrap select{position:absolute;opacity:0;width:100%;height:100%;top:0;right:0;cursor:pointer}
 .cat-header{padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;background:var(--s2);border-bottom:1px solid var(--brd);transition:background .15s}
 .cat-header:hover{background:var(--s3)}
