@@ -293,6 +293,13 @@ textarea{resize:vertical;min-height:72px;line-height:1.5}
 }
 /* ─── Category Accordion ─── */
 .cat-accordion{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow)}
+.cat-accordion.dragging{opacity:.5;border:2px dashed var(--grn)}
+.cat-accordion.drag-over{border:2px solid var(--grn);background:var(--gl)}
+.cat-drag-handle{cursor:grab;padding:0 8px 0 0;color:var(--t3);font-size:16px;line-height:1;user-select:none;flex-shrink:0}
+.cat-drag-handle:active{cursor:grabbing}
+.urg-badge-wrap{position:relative;display:inline-flex;align-items:center;border-radius:20px;transition:box-shadow .15s}
+.urg-badge-wrap:hover{box-shadow:0 0 0 3px rgba(0,0,0,0.12)}
+.urg-badge-wrap select{position:absolute;opacity:0;width:100%;height:100%;top:0;right:0;cursor:pointer}
 .cat-header{padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;background:var(--s2);border-bottom:1px solid var(--brd);transition:background .15s}
 .cat-header:hover{background:var(--s3)}
 .cat-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
@@ -1277,6 +1284,13 @@ function buildList(list){
         S.openCats = S.openCats.filter(id => id !== catId);
       }
     };
+
+    // ─── Drag handle ───
+    const dragHandle = mk('span', 'cat-drag-handle');
+    dragHandle.textContent = '⠿';
+    dragHandle.title = 'גרור לשינוי סדר';
+    dragHandle.onmousedown = e => e.stopPropagation(); // prevent accordion toggle
+    catHeader.append(dragHandle);
     
     const catTitle = mk('div', 'cat-title');
     catTitle.style.cssText = 'display:flex;align-items:center;gap:8px;flex:1;min-width:0';
@@ -1284,15 +1298,12 @@ function buildList(list){
     textSpan.textContent = `${cat.icon} ${cat.he}`;
     catTitle.append(textSpan);
 
-    // ─── Urgency dropdown ───
+    // ─── Urgency dropdown with hover highlight ───
     if (cat.u) {
-      const urgWrap = mk('div');
-      urgWrap.style.cssText = 'position:relative;display:flex;align-items:center';
-
+      const urgWrap = mk('div', 'urg-badge-wrap');
+      urgWrap.title = 'שנה דחיפות';
       const badge = urgBadge(cat.u);
-
       const urgDrop = mk('select');
-      urgDrop.style.cssText = 'position:absolute;opacity:0;width:100%;height:100%;top:0;right:0;cursor:pointer;font-size:13px';
       [['critical','🔴 קריטי'],['high','🟠 דחוף'],['medium','🟡 בינוני'],['low','🟢 יכול לחכות']].forEach(([v,l]) => {
         const o = document.createElement('option');
         o.value = v; o.textContent = l;
@@ -1308,7 +1319,6 @@ function buildList(list){
         refreshList();
         toast('דחיפות עודכנה: ' + UHE[next]);
       };
-
       urgWrap.append(badge, urgDrop);
       catTitle.append(urgWrap);
     }
@@ -1316,40 +1326,47 @@ function buildList(list){
     const catCount = mk('span', 'cat-count');
     catCount.textContent = `(${catItems.length})`;
     catTitle.append(catCount);
-
-    // ─── Category reorder arrows ───
-    const catReorder = mk('div');
-    catReorder.style.cssText = 'display:flex;flex-direction:column;gap:1px;margin-left:4px';
-    ['up','down'].forEach(dir => {
-      const btn = mk('button');
-      btn.textContent = dir === 'up' ? '▲' : '▼';
-      btn.title = dir === 'up' ? 'הזז למעלה' : 'הזז למטה';
-      btn.style.cssText = 'width:18px;height:16px;font-size:8px;border:1px solid var(--brd2);border-radius:3px;background:var(--s2);cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;color:var(--t2)';
-      btn.onclick = async e => {
-        e.stopPropagation();
-        const allCats = CATS.slice().sort((a,b) => (a.priority||0) - (b.priority||0));
-        const idx = allCats.findIndex(c => c.id === catId);
-        const swapIdx = dir === 'up' ? idx - 1 : idx + 1;
-        if(swapIdx < 0 || swapIdx >= allCats.length) return;
-        const swapCat = allCats[swapIdx];
-        const myPri = cat.priority ?? idx;
-        const swapPri = swapCat.priority ?? swapIdx;
-        cat.priority = swapPri;
-        swapCat.priority = myPri;
-        await Promise.all([
-          sb.from('categories').update({ priority: cat.priority }).eq('id', catId),
-          sb.from('categories').update({ priority: swapCat.priority }).eq('id', swapCat.id),
-        ]);
-        refreshList();
-      };
-      catReorder.append(btn);
-    });
     
     const catChev = mk('span', 'cat-chev');
     catChev.textContent = '▼';
     
-    catHeader.append(catTitle, catReorder, catChev);
+    catHeader.append(catTitle, catChev);
     catAccordion.append(catHeader);
+
+    // ─── Drag-to-reorder logic ───
+    catAccordion.draggable = true;
+    catAccordion.dataset.catId = catId;
+    catAccordion.ondragstart = e => {
+      e.dataTransfer.setData('text/plain', catId);
+      e.dataTransfer.effectAllowed = 'move';
+      setTimeout(() => catAccordion.classList.add('dragging'), 0);
+    };
+    catAccordion.ondragend = () => catAccordion.classList.remove('dragging');
+    catAccordion.ondragover = e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      catAccordion.classList.add('drag-over');
+    };
+    catAccordion.ondragleave = () => catAccordion.classList.remove('drag-over');
+    catAccordion.ondrop = async e => {
+      e.preventDefault();
+      catAccordion.classList.remove('drag-over');
+      const draggedId = e.dataTransfer.getData('text/plain');
+      if(draggedId === catId) return;
+      // Reorder in CATS array
+      const allCats = CATS.slice().sort((a,b) => (a.priority||0) - (b.priority||0));
+      const fromIdx = allCats.findIndex(c => c.id === draggedId);
+      const toIdx   = allCats.findIndex(c => c.id === catId);
+      if(fromIdx < 0 || toIdx < 0) return;
+      const [moved] = allCats.splice(fromIdx, 1);
+      allCats.splice(toIdx, 0, moved);
+      // Reassign priorities sequentially and persist
+      await Promise.all(allCats.map((c, i) => {
+        c.priority = i;
+        return sb.from('categories').update({ priority: i }).eq('id', c.id);
+      }));
+      refreshList();
+    };
     
     const catBody = mk('div', 'cat-body');
     
