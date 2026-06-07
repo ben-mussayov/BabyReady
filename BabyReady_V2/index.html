@@ -1349,6 +1349,8 @@ function buildList(list){
 
       const list = catAccordion.parentElement;
 
+      let dragRect = null;
+
       const activate = () => {
         activated = true;
         _dragging = true;
@@ -1360,17 +1362,17 @@ function buildList(list){
           return { el: a, mid: r.top + r.height / 2 };
         });
 
-        const rect = catAccordion.getBoundingClientRect();
+        dragRect = catAccordion.getBoundingClientRect();
 
-        // Floating clone
-        clone = catAccordion.cloneNode(true);
-        clone.style.cssText = `position:fixed;top:${rect.top}px;left:${rect.left}px;width:${rect.width}px;z-index:9999;pointer-events:none;box-shadow:0 16px 40px rgba(0,0,0,0.22);border:2px solid var(--grn);border-radius:var(--r);background:var(--surf);opacity:0.97;transform:scale(1.02);`;
-        document.body.append(clone);
-
-        // Placeholder
+        // Placeholder first (keeps space)
         placeholder = document.createElement('div');
-        placeholder.style.cssText = `height:${rect.height}px;margin-bottom:10px;border-radius:var(--r);border:2px dashed var(--grn);background:var(--gl);opacity:0.6;`;
+        placeholder.style.cssText = `height:${dragRect.height}px;margin-bottom:10px;border-radius:var(--r);border:2px dashed var(--grn);background:var(--gl);opacity:0.6;box-sizing:border-box;`;
         catAccordion.replaceWith(placeholder);
+
+        // Floating clone after placeholder is in DOM
+        clone = catAccordion.cloneNode(true);
+        clone.style.cssText = `position:fixed;top:${dragRect.top}px;left:${dragRect.left}px;width:${dragRect.width}px;height:${dragRect.height}px;z-index:9999;pointer-events:none;box-shadow:0 16px 40px rgba(0,0,0,0.22);border:2px solid var(--grn);border-radius:var(--r);background:var(--surf);opacity:0.97;transform:scale(1.02);box-sizing:border-box;`;
+        document.body.append(clone);
       };
 
       const onMove = ev => {
@@ -1379,8 +1381,7 @@ function buildList(list){
           activate();
         }
 
-        const rect_h = clone.offsetHeight;
-        clone.style.top = (ev.clientY - rect_h / 2) + 'px';
+        clone.style.top = (ev.clientY - dragRect.height / 2) + 'px';
 
         // Find insert position from frozen snapshots
         let target = null;
