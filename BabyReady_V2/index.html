@@ -1219,7 +1219,9 @@ function buildList(list){
   let items=[...S.items].sort((a,b)=>{
     const pa=PRI.includes(a.category_id)?-1:0, pb=PRI.includes(b.category_id)?-1:0;
     if(pa!==pb) return pa-pb;
-    return (UO[a._cat?.u]||9)-(UO[b._cat?.u]||9);
+    const uDiff = (UO[a._cat?.u]||9)-(UO[b._cat?.u]||9);
+    if(uDiff !== 0) return uDiff;
+    return (a.sort_order||0)-(b.sort_order||0);
   });
   if(S.filterU==='done') items=items.filter(p=>p.purchased);
   else if(S.filterU!=='all') items=items.filter(p=>p._cat?.u===S.filterU);
@@ -1283,7 +1285,19 @@ function buildList(list){
     catTitle.append(textSpan);
     
     if (cat.u) {
-      catTitle.append(urgBadge(cat.u));
+      const badge = urgBadge(cat.u);
+      badge.title = 'לחץ לשינוי דחיפות';
+      badge.style.cursor = 'pointer';
+      badge.onclick = async (e) => {
+        e.stopPropagation();
+        const order = ['critical','high','medium','low'];
+        const next = order[(order.indexOf(cat.u) + 1) % order.length];
+        await sb.from('categories').update({ urgency: next }).eq('id', catId);
+        cat.u = next;
+        refreshList();
+        toast('דחיפות עודכנה: ' + UHE[next]);
+      };
+      catTitle.append(badge);
     }
     
     const catCount = mk('span', 'cat-count');
@@ -1369,7 +1383,43 @@ function buildModelRow(item){
     S.items=S.items.filter(i=>i.id!==item.id);
     refreshList(); renderMain(); toast('הוסר');
   };
-  acts.append(delBtn); head.append(acts,chev);
+
+  // ─── Reorder buttons ───
+  const reorderWrap = mk('div');
+  reorderWrap.style.cssText = 'display:flex;flex-direction:column;gap:2px';
+
+  const mkArrow = (dir) => {
+    const btn = mk('button','btn bg');
+    btn.textContent = dir === 'up' ? '↑' : '↓';
+    btn.title = dir === 'up' ? 'הזז למעלה' : 'הזז למטה';
+    btn.style.cssText = 'width:22px;height:22px;font-size:11px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:4px';
+    btn.onclick = async e => {
+      e.stopPropagation();
+      // Get all items in same category, sorted by current sort_order
+      const catItems = S.items
+        .filter(i => i.category_id === item.category_id)
+        .sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
+      const idx = catItems.findIndex(i => i.id === item.id);
+      const swapIdx = dir === 'up' ? idx - 1 : idx + 1;
+      if(swapIdx < 0 || swapIdx >= catItems.length) return;
+      const swapItem = catItems[swapIdx];
+      // Assign clean sequential sort_orders
+      const newOrder = item.sort_order ?? idx;
+      const swapOrder = swapItem.sort_order ?? swapIdx;
+      // Swap values
+      item.sort_order = swapOrder;
+      swapItem.sort_order = newOrder;
+      // Persist both
+      await Promise.all([
+        sb.from('user_items').update({ sort_order: item.sort_order }).eq('id', item.id),
+        sb.from('user_items').update({ sort_order: swapItem.sort_order }).eq('id', swapItem.id),
+      ]);
+      refreshList();
+    };
+    return btn;
+  };
+  reorderWrap.append(mkArrow('up'), mkArrow('down'));
+  acts.append(reorderWrap, delBtn); head.append(acts,chev);
   head.onclick=()=>{
     row.classList.toggle('open');
     if(row.classList.contains('open')) {
