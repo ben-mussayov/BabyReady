@@ -1342,55 +1342,73 @@ function buildList(list){
       dragHandle.setPointerCapture(e.pointerId);
       _dragging = false;
 
+      const startY = e.clientY;
+      const THRESHOLD = 6; // px before drag activates
+      let activated = false;
+      let clone = null, placeholder = null, snapshots = null, insertBefore = null;
+
       const list = catAccordion.parentElement;
-      // Snapshot all accordion rects BEFORE any DOM changes
-      const allAccs = [...list.querySelectorAll('.cat-accordion')];
-      const snapshots = allAccs.map(a => ({ el: a, mid: a.getBoundingClientRect().top + a.getBoundingClientRect().height / 2 }));
 
-      const rect = catAccordion.getBoundingClientRect();
+      const activate = () => {
+        activated = true;
+        _dragging = true;
 
-      // Floating clone
-      const clone = catAccordion.cloneNode(true);
-      clone.style.cssText = `position:fixed;top:${rect.top}px;left:${rect.left}px;width:${rect.width}px;z-index:9999;pointer-events:none;box-shadow:0 16px 40px rgba(0,0,0,0.22);border:2px solid var(--grn);border-radius:var(--r);background:var(--surf);opacity:0.97;transform:scale(1.02);transition:none;`;
-      document.body.append(clone);
+        // Snapshot rects NOW (before DOM changes)
+        const allAccs = [...list.querySelectorAll('.cat-accordion')];
+        snapshots = allAccs.map(a => {
+          const r = a.getBoundingClientRect();
+          return { el: a, mid: r.top + r.height / 2 };
+        });
 
-      // Placeholder keeps original space, dims the source
-      const placeholder = document.createElement('div');
-      placeholder.style.cssText = `height:${rect.height}px;margin-bottom:10px;border-radius:var(--r);border:2px dashed var(--grn);background:var(--gl);opacity:0.5;transition:none;`;
-      catAccordion.replaceWith(placeholder);
+        const rect = catAccordion.getBoundingClientRect();
 
-      let insertBefore = null; // the accordion we'll insert before
+        // Floating clone
+        clone = catAccordion.cloneNode(true);
+        clone.style.cssText = `position:fixed;top:${rect.top}px;left:${rect.left}px;width:${rect.width}px;z-index:9999;pointer-events:none;box-shadow:0 16px 40px rgba(0,0,0,0.22);border:2px solid var(--grn);border-radius:var(--r);background:var(--surf);opacity:0.97;transform:scale(1.02);`;
+        document.body.append(clone);
+
+        // Placeholder
+        placeholder = document.createElement('div');
+        placeholder.style.cssText = `height:${rect.height}px;margin-bottom:10px;border-radius:var(--r);border:2px dashed var(--grn);background:var(--gl);opacity:0.6;`;
+        catAccordion.replaceWith(placeholder);
+      };
 
       const onMove = ev => {
-        _dragging = true;
-        clone.style.top = (ev.clientY - rect.height / 2) + 'px';
+        if(!activated) {
+          if(Math.abs(ev.clientY - startY) < THRESHOLD) return;
+          activate();
+        }
 
-        // Use frozen snapshots — no layout thrashing
+        const rect_h = clone.offsetHeight;
+        clone.style.top = (ev.clientY - rect_h / 2) + 'px';
+
+        // Find insert position from frozen snapshots
         let target = null;
         for(const s of snapshots) {
           if(s.el === catAccordion) continue;
           if(ev.clientY < s.mid) { target = s.el; break; }
         }
-        insertBefore = target;
-
-        // Move placeholder to show drop position
-        if(insertBefore && insertBefore.parentElement === list) {
-          list.insertBefore(placeholder, insertBefore);
-        } else if(!insertBefore) {
-          list.append(placeholder); // drop at end
+        if(target !== insertBefore) {
+          insertBefore = target;
+          if(insertBefore && insertBefore.parentElement === list) {
+            list.insertBefore(placeholder, insertBefore);
+          } else {
+            list.append(placeholder);
+          }
         }
       };
 
       const onUp = async ev => {
         dragHandle.removeEventListener('pointermove', onMove);
         dragHandle.removeEventListener('pointerup', onUp);
-        clone.remove();
 
-        // Put original back where placeholder is, collapsed
+        if(!activated) return; // just a click, do nothing
+
+        clone.remove();
         catAccordion.classList.remove('open');
         placeholder.replaceWith(catAccordion);
 
-        // Compute new order from current DOM order
+        // Compute new order from DOM
         const newOrder = [...list.querySelectorAll('.cat-accordion')].map(a => a.dataset.catId).filter(Boolean);
         const allCats = CATS.slice().sort((a,b) => (a.priority||0) - (b.priority||0));
         let changed = false;
@@ -1400,11 +1418,9 @@ function buildList(list){
         });
         if(changed) {
           await Promise.all(allCats.map(c => sb.from('categories').update({ priority: c.priority }).eq('id', c.id)));
-          // Re-sort CATS in memory
           CATS.sort((a,b) => (a.priority||0) - (b.priority||0));
         }
 
-        // Brief timeout so click doesn't fire
         setTimeout(() => { _dragging = false; }, 50);
       };
 
