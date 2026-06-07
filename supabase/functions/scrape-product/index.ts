@@ -21,7 +21,6 @@ interface ProductData {
   image_url: string;
   store_name: string;
   store_id: string;
-  store_logo_url: string;
   product_url: string;
   in_stock: boolean;
 }
@@ -30,6 +29,8 @@ interface ProductData {
 const STORE_ID_MAP: Record<string, string> = {
   "shilav.co.il": "shilav",
   "aglis.co.il": "aglis",
+  "agalease-baby.co.il": "aglis",
+  "agalease.co.il": "aglis",
   "babystar.co.il": "babystar",
   "motzetzim.co.il": "motzetzim",
   "motsesim.co.il": "motzetzim",
@@ -40,11 +41,8 @@ const STORE_ID_MAP: Record<string, string> = {
   "moradbaby.co.il": "moradbaby",
   "babylino.co.il": "babylino",
   "kochavnolad.co.il": "kochavnolad",
-  "baby-star.co.il": "babystar",
-  "super-pharm.co.il": "superpharm",
-  "be.co.il": "be",
+  "silvercrossil.co.il": "silvercrossil",
   "ksp.co.il": "ksp",
-  "ivory.co.il": "ivory",
 };
 
 // ─── Known brand names for fallback extraction ───
@@ -54,7 +52,7 @@ const KNOWN_BRANDS = [
   "בוגבו","סייבקס","נונה","דונה","ג'ואי","בייביזן","סטוקה","מקסי קוזי","צ'יקו",
 ];
 
-serve(async (req: Request) => {
+serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
 
   try {
@@ -73,6 +71,45 @@ serve(async (req: Request) => {
     
     // Derive a human-readable store name from hostname
     const storeName = deriveStoreName(hostname);
+
+    // ─── KSP special handler: use their internal JSON API ───
+    if (hostname.includes("ksp.co.il")) {
+      const itemIdMatch = url.match(/\/item\/(\d+)/);
+      if (!itemIdMatch) throw new Error("Could not extract KSP item ID from URL");
+      const itemId = itemIdMatch[1];
+
+      const kspRes = await fetch(`https://ksp.co.il/api/web/item/${itemId}`, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          "Accept": "application/json",
+          "Referer": "https://ksp.co.il/",
+          "Accept-Language": "he-IL,he;q=0.9,en;q=0.8",
+        },
+      });
+      if (!kspRes.ok) throw new Error(`KSP API failed: ${kspRes.status}`);
+      const kspData = await kspRes.json();
+
+      const imgUrl = kspData.img
+        ? (kspData.img.startsWith("http") ? kspData.img : `https://ksp.co.il${kspData.img}`)
+        : (kspData.image || kspData.imageUrl || "");
+
+      const result: ProductData = {
+        name: kspData.name || kspData.title || "Unknown Product",
+        brand: kspData.brand || extractBrandFromText(kspData.name || "") || "",
+        description: cleanDescription(kspData.description || kspData.shortDescription || ""),
+        price: parseFloat(String(kspData.price || kspData.salePrice || kspData.finalPrice || "0").replace(/,/g, "")) || 0,
+        currency: "ILS",
+        image_url: imgUrl,
+        store_name: "KSP",
+        store_id: "ksp",
+        product_url: url,
+        in_stock: kspData.inStock !== false && kspData.availability !== "OutOfStock",
+      };
+
+      return new Response(JSON.stringify({ data: result }), {
+        headers: { ...CORS, "Content-Type": "application/json" },
+      });
+    }
 
     // Fetch the page
     const response = await fetch(url, {
@@ -118,7 +155,6 @@ serve(async (req: Request) => {
       image_url: resolveUrl(jsonLd.image || og.image || htmlFallback.image || "", url),
       store_name: storeName,
       store_id,
-      store_logo_url: extractStoreLogo(html, url),
       product_url: url,
       in_stock: jsonLd.inStock !== false,
     };
@@ -127,7 +163,7 @@ serve(async (req: Request) => {
       headers: { ...CORS, "Content-Type": "application/json" },
     });
 
-  } catch (err: any) {
+  } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
       headers: { ...CORS, "Content-Type": "application/json" },
@@ -161,15 +197,14 @@ function extractJsonLdProduct(html: string): JsonLdResult {
       const product = findProductInJsonLd(parsed);
       if (product) {
         // Extract offers
-        let price = 0, currency = "";
-        let inStock = true;
+        let price = 0, currency = "", inStock = true;
         const offers = product.offers;
         if (offers) {
           const offer = Array.isArray(offers) ? offers[0] : offers;
           price = parseFloat(String(offer.price || offer.lowPrice || "0").replace(/,/g, "")) || 0;
           currency = offer.priceCurrency || "";
           if (offer.availability) {
-            inStock = !offer.availability.toLowerCase().includes("outofstock");
+            inStock = offer.availability.toLowerCase().includes("instock");
           }
         }
 
@@ -375,6 +410,8 @@ function deriveStoreName(hostname: string): string {
     "moradbaby.co.il": "מוראד בייבי",
     "babylino.co.il": "בייבילינו",
     "kochavnolad.co.il": "כוכב נולד",
+    "silvercrossil.co.il": "סילבר קרוס ישראל",
+    "ksp.co.il": "KSP",
   };
   
   const key = Object.keys(nameMap).find(k => hostname.includes(k));
@@ -386,25 +423,4 @@ function deriveStoreName(hostname: string): string {
     .replace(/\.com$/, "")
     .replace(/[._-]/g, " ")
     .replace(/\b\w/g, c => c.toUpperCase());
-}
-
-function extractStoreLogo(html: string, url: string): string {
-  // Try to find favicon in link tags
-  const iconRegex = /<link[^>]+rel\s*=\s*["'](?:shortcut\s+)?icon["'][^>]*href\s*=\s*["']([^"']+)["']/i;
-  const match = html.match(iconRegex);
-  
-  let logoUrl = "";
-  if (match && match[1]) {
-    logoUrl = resolveUrl(match[1], url);
-  } else {
-    // google favicon service fallback
-    try {
-      const urlObj = new URL(url);
-      logoUrl = `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=128`;
-    } catch(e) {
-      logoUrl = "";
-    }
-  }
-  
-  return logoUrl;
 }

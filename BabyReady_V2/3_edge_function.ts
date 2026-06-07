@@ -42,6 +42,7 @@ const STORE_ID_MAP: Record<string, string> = {
   "babylino.co.il": "babylino",
   "kochavnolad.co.il": "kochavnolad",
   "silvercrossil.co.il": "silvercrossil",
+  "ksp.co.il": "ksp",
 };
 
 // ─── Known brand names for fallback extraction ───
@@ -70,6 +71,45 @@ serve(async (req) => {
     
     // Derive a human-readable store name from hostname
     const storeName = deriveStoreName(hostname);
+
+    // ─── KSP special handler: use their internal JSON API ───
+    if (hostname.includes("ksp.co.il")) {
+      const itemIdMatch = url.match(/\/item\/(\d+)/);
+      if (!itemIdMatch) throw new Error("Could not extract KSP item ID from URL");
+      const itemId = itemIdMatch[1];
+
+      const kspRes = await fetch(`https://ksp.co.il/api/web/item/${itemId}`, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          "Accept": "application/json",
+          "Referer": "https://ksp.co.il/",
+          "Accept-Language": "he-IL,he;q=0.9,en;q=0.8",
+        },
+      });
+      if (!kspRes.ok) throw new Error(`KSP API failed: ${kspRes.status}`);
+      const kspData = await kspRes.json();
+
+      const imgUrl = kspData.img
+        ? (kspData.img.startsWith("http") ? kspData.img : `https://ksp.co.il${kspData.img}`)
+        : (kspData.image || kspData.imageUrl || "");
+
+      const result: ProductData = {
+        name: kspData.name || kspData.title || "Unknown Product",
+        brand: kspData.brand || extractBrandFromText(kspData.name || "") || "",
+        description: cleanDescription(kspData.description || kspData.shortDescription || ""),
+        price: parseFloat(String(kspData.price || kspData.salePrice || kspData.finalPrice || "0").replace(/,/g, "")) || 0,
+        currency: "ILS",
+        image_url: imgUrl,
+        store_name: "KSP",
+        store_id: "ksp",
+        product_url: url,
+        in_stock: kspData.inStock !== false && kspData.availability !== "OutOfStock",
+      };
+
+      return new Response(JSON.stringify({ data: result }), {
+        headers: { ...CORS, "Content-Type": "application/json" },
+      });
+    }
 
     // Fetch the page
     const response = await fetch(url, {
@@ -370,6 +410,8 @@ function deriveStoreName(hostname: string): string {
     "moradbaby.co.il": "מוראד בייבי",
     "babylino.co.il": "בייבילינו",
     "kochavnolad.co.il": "כוכב נולד",
+    "silvercrossil.co.il": "סילבר קרוס ישראל",
+    "ksp.co.il": "KSP",
   };
   
   const key = Object.keys(nameMap).find(k => hostname.includes(k));
