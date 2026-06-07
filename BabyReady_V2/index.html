@@ -790,7 +790,15 @@ async function loadItems(){
 
 async function loadEvalCart(){
   const { data } = await sb.from('user_eval_cart').select('*').eq('user_id', S.user.id);
-  S.evalCart = data || [];
+  const allData = data || [];
+  // Filter out stale rows pointing to deleted items
+  S.evalCart = allData.filter(e => S.items.some(i => i.id === e.user_item_id));
+  // Clean up orphaned rows in DB silently
+  const orphans = allData.filter(e => !S.items.some(i => i.id === e.user_item_id));
+  if(orphans.length > 0){
+    const orphanIds = orphans.map(o => o.id);
+    await sb.from('user_eval_cart').delete().in('id', orphanIds);
+  }
 }
 
 function openDrawer(title, content) {
