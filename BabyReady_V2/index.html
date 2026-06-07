@@ -292,9 +292,9 @@ textarea{resize:vertical;min-height:72px;line-height:1.5}
   .model-grid{grid-template-columns:1fr 1fr}
 }
 /* ─── Category Accordion ─── */
-.cat-accordion{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow);transition:margin-top .2s ease,transform .15s,box-shadow .15s}
-.cat-accordion.dragging{opacity:.9;transform:scale(1.02) rotate(-0.5deg);box-shadow:0 8px 28px rgba(0,0,0,0.22);border:2px solid var(--grn);z-index:50;position:relative}
-.cat-accordion.drag-over{margin-top:52px}
+.cat-accordion{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow);transition:margin-top .15s ease,box-shadow .15s}
+.cat-accordion.dragging{box-shadow:0 12px 32px rgba(0,0,0,0.25);border:2px solid var(--grn);z-index:999;position:relative;pointer-events:none}
+.cat-accordion.drag-over{margin-top:56px;transition:margin-top .15s ease}
 .cat-drag-handle{cursor:grab;padding:0 8px 0 0;color:var(--t3);font-size:16px;line-height:1;user-select:none;flex-shrink:0}
 .cat-drag-handle:active{cursor:grabbing}
 .urg-badge-wrap{position:relative;display:inline-flex;align-items:center;border-radius:20px;transition:box-shadow .15s}
@@ -1333,40 +1333,76 @@ function buildList(list){
     catHeader.append(catTitle, catChev);
     catAccordion.append(catHeader);
 
-    // ─── Drag-to-reorder logic ───
-    catAccordion.draggable = true;
+
+    // ─── Smooth pointer drag-to-reorder on handle only ───
     catAccordion.dataset.catId = catId;
-    catAccordion.ondragstart = e => {
-      e.dataTransfer.setData('text/plain', catId);
-      e.dataTransfer.effectAllowed = 'move';
-      setTimeout(() => catAccordion.classList.add('dragging'), 0);
-    };
-    catAccordion.ondragend = () => catAccordion.classList.remove('dragging');
-    catAccordion.ondragover = e => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      catAccordion.classList.add('drag-over');
-    };
-    catAccordion.ondragleave = () => catAccordion.classList.remove('drag-over');
-    catAccordion.ondrop = async e => {
-      e.preventDefault();
-      catAccordion.classList.remove('drag-over');
-      const draggedId = e.dataTransfer.getData('text/plain');
-      if(draggedId === catId) return;
-      // Reorder in CATS array
-      const allCats = CATS.slice().sort((a,b) => (a.priority||0) - (b.priority||0));
-      const fromIdx = allCats.findIndex(c => c.id === draggedId);
-      const toIdx   = allCats.findIndex(c => c.id === catId);
-      if(fromIdx < 0 || toIdx < 0) return;
-      const [moved] = allCats.splice(fromIdx, 1);
-      allCats.splice(toIdx, 0, moved);
-      // Reassign priorities sequentially and persist
-      await Promise.all(allCats.map((c, i) => {
-        c.priority = i;
-        return sb.from('categories').update({ priority: i }).eq('id', c.id);
-      }));
-      refreshList();
-    };
+    dragHandle.addEventListener('pointerdown', e => {
+      e.stopPropagation();
+      const list = catAccordion.parentElement;
+      const allAccordions = () => [...list.querySelectorAll('.cat-accordion')];
+      const startY = e.clientY;
+      const origRect = catAccordion.getBoundingClientRect();
+      const origIndex = allAccordions().indexOf(catAccordion);
+
+      // Lift the card
+      catAccordion.classList.add('dragging');
+      catAccordion.style.top = origRect.top + 'px';
+      catAccordion.style.left = origRect.left + 'px';
+      catAccordion.style.width = origRect.width + 'px';
+      dragHandle.setPointerCapture(e.pointerId);
+
+      let lastHovered = null;
+
+      const onMove = ev => {
+        const dy = ev.clientY - startY;
+        catAccordion.style.transform = `translateY(${dy}px) scale(1.02) rotate(-0.5deg)`;
+
+        // Find which card we're hovering over
+        allAccordions().forEach(acc => {
+          if(acc === catAccordion) return;
+          const r = acc.getBoundingClientRect();
+          const mid = r.top + r.height / 2;
+          if(ev.clientY > r.top && ev.clientY < r.bottom) {
+            if(lastHovered !== acc) {
+              if(lastHovered) lastHovered.classList.remove('drag-over');
+              acc.classList.add('drag-over');
+              lastHovered = acc;
+            }
+          }
+        });
+      };
+
+      const onUp = async ev => {
+        dragHandle.removeEventListener('pointermove', onMove);
+        dragHandle.removeEventListener('pointerup', onUp);
+
+        catAccordion.classList.remove('dragging');
+        catAccordion.style.transform = '';
+        catAccordion.style.top = '';
+        catAccordion.style.left = '';
+        catAccordion.style.width = '';
+
+        if(lastHovered) {
+          lastHovered.classList.remove('drag-over');
+          const targetId = lastHovered.dataset.catId;
+          const allCats = CATS.slice().sort((a,b) => (a.priority||0) - (b.priority||0));
+          const fromIdx = allCats.findIndex(c => c.id === catId);
+          const toIdx   = allCats.findIndex(c => c.id === targetId);
+          if(fromIdx >= 0 && toIdx >= 0 && fromIdx !== toIdx) {
+            const [moved] = allCats.splice(fromIdx, 1);
+            allCats.splice(toIdx, 0, moved);
+            await Promise.all(allCats.map((c, i) => {
+              c.priority = i;
+              return sb.from('categories').update({ priority: i }).eq('id', c.id);
+            }));
+            refreshList();
+          }
+        }
+      };
+
+      dragHandle.addEventListener('pointermove', onMove);
+      dragHandle.addEventListener('pointerup', onUp);
+    });
     
     const catBody = mk('div', 'cat-body');
     
