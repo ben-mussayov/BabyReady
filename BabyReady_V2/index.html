@@ -1723,7 +1723,16 @@ function openAddLinkModal(item) {
       urlStatus.textContent = '⚠️ לא הצלחנו לשאוב אוטומטית. נפתח מסך חלופי.';
       await sb.from('user_items').update({custom_url:url}).eq('id',item.id);
       item.custom_url=url;
-      setTimeout(()=> { closeModal(); openPriceModal(item, url, { name: 'מוצר ידני', image_url: '' }); }, 1500);
+      setTimeout(()=> {
+        let fallbackStoreId = 'other', fallbackStoreName = '';
+        try {
+          const h = new URL(url).hostname.replace('www.','');
+          const sk = Object.keys(STORES).find(k => STORES[k].url && new URL(STORES[k].url).hostname.replace('www.','') === h);
+          if(sk){ fallbackStoreId = sk; fallbackStoreName = STORES[sk].name; }
+        } catch(e){}
+        closeModal();
+        openPriceModal(item, url, { name: 'מוצר ידני', image_url: '', store_id: fallbackStoreId, store_name: fallbackStoreName });
+      }, 1500);
     } finally {
       fetchBtn.disabled = false;
       fetchBtn.textContent = 'שאיבת נתונים';
