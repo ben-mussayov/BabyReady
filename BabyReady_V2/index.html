@@ -292,8 +292,7 @@ textarea{resize:vertical;min-height:72px;line-height:1.5}
   .model-grid{grid-template-columns:1fr 1fr}
 }
 /* ─── Category Accordion ─── */
-.cat-accordion{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow);transition:margin-top .15s ease}
-.cat-accordion.drag-over{margin-top:56px}
+.cat-accordion{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow)}
 .cat-drag-handle{cursor:grab;padding:0 8px 0 0;color:var(--t3);font-size:16px;line-height:1;user-select:none;flex-shrink:0}
 .cat-drag-handle:active{cursor:grabbing}
 .urg-badge-wrap{position:relative;display:inline-flex;align-items:center;border-radius:20px;transition:box-shadow .15s}
@@ -1335,45 +1334,50 @@ function buildList(list){
 
     // ─── Smooth pointer drag-to-reorder on handle only ───
     catAccordion.dataset.catId = catId;
+    let _dragging = false; // flag to suppress accordion toggle on drop
+
     dragHandle.addEventListener('pointerdown', e => {
       e.stopPropagation();
       e.preventDefault();
       dragHandle.setPointerCapture(e.pointerId);
+      _dragging = false;
 
       const list = catAccordion.parentElement;
-      const getAccordions = () => [...list.querySelectorAll('.cat-accordion:not(.drag-clone)')];
+      // Snapshot all accordion rects BEFORE any DOM changes
+      const allAccs = [...list.querySelectorAll('.cat-accordion')];
+      const snapshots = allAccs.map(a => ({ el: a, mid: a.getBoundingClientRect().top + a.getBoundingClientRect().height / 2 }));
 
-      // Snapshot positions before anything moves
       const rect = catAccordion.getBoundingClientRect();
 
-      // Create a floating clone that follows the cursor
+      // Floating clone
       const clone = catAccordion.cloneNode(true);
-      clone.classList.add('drag-clone');
-      clone.style.cssText = `position:fixed;top:${rect.top}px;left:${rect.left}px;width:${rect.width}px;z-index:9999;pointer-events:none;box-shadow:0 12px 32px rgba(0,0,0,0.22);border:2px solid var(--grn);border-radius:var(--r);background:var(--surf);opacity:0.96;transform:scale(1.02);`;
+      clone.style.cssText = `position:fixed;top:${rect.top}px;left:${rect.left}px;width:${rect.width}px;z-index:9999;pointer-events:none;box-shadow:0 16px 40px rgba(0,0,0,0.22);border:2px solid var(--grn);border-radius:var(--r);background:var(--surf);opacity:0.97;transform:scale(1.02);transition:none;`;
       document.body.append(clone);
 
-      // Dim original in place so space is preserved
-      catAccordion.style.opacity = '0.25';
-      catAccordion.style.pointerEvents = 'none';
+      // Placeholder keeps original space, dims the source
+      const placeholder = document.createElement('div');
+      placeholder.style.cssText = `height:${rect.height}px;margin-bottom:10px;border-radius:var(--r);border:2px dashed var(--grn);background:var(--gl);opacity:0.5;transition:none;`;
+      catAccordion.replaceWith(placeholder);
 
-      let lastOver = null;
+      let insertBefore = null; // the accordion we'll insert before
 
       const onMove = ev => {
-        // Clone follows cursor centered vertically
+        _dragging = true;
         clone.style.top = (ev.clientY - rect.height / 2) + 'px';
 
-        // Detect which accordion the cursor is over
-        let found = null;
-        getAccordions().forEach(acc => {
-          if(acc === catAccordion) return;
-          const r = acc.getBoundingClientRect();
-          if(ev.clientY >= r.top && ev.clientY <= r.bottom) found = acc;
-        });
+        // Use frozen snapshots — no layout thrashing
+        let target = null;
+        for(const s of snapshots) {
+          if(s.el === catAccordion) continue;
+          if(ev.clientY < s.mid) { target = s.el; break; }
+        }
+        insertBefore = target;
 
-        if(found !== lastOver) {
-          if(lastOver) lastOver.classList.remove('drag-over');
-          if(found) found.classList.add('drag-over');
-          lastOver = found;
+        // Move placeholder to show drop position
+        if(insertBefore && insertBefore.parentElement === list) {
+          list.insertBefore(placeholder, insertBefore);
+        } else if(!insertBefore) {
+          list.append(placeholder); // drop at end
         }
       };
 
@@ -1381,30 +1385,37 @@ function buildList(list){
         dragHandle.removeEventListener('pointermove', onMove);
         dragHandle.removeEventListener('pointerup', onUp);
         clone.remove();
-        catAccordion.style.opacity = '';
-        catAccordion.style.pointerEvents = '';
-        if(lastOver) lastOver.classList.remove('drag-over');
 
-        if(lastOver) {
-          const targetId = lastOver.dataset.catId;
-          const allCats = CATS.slice().sort((a,b) => (a.priority||0) - (b.priority||0));
-          const fromIdx = allCats.findIndex(c => c.id === catId);
-          const toIdx   = allCats.findIndex(c => c.id === targetId);
-          if(fromIdx >= 0 && toIdx >= 0 && fromIdx !== toIdx) {
-            const [moved] = allCats.splice(fromIdx, 1);
-            allCats.splice(toIdx, 0, moved);
-            await Promise.all(allCats.map((c, i) => {
-              c.priority = i;
-              return sb.from('categories').update({ priority: i }).eq('id', c.id);
-            }));
-            refreshList();
-          }
+        // Put original back where placeholder is, collapsed
+        catAccordion.classList.remove('open');
+        placeholder.replaceWith(catAccordion);
+
+        // Compute new order from current DOM order
+        const newOrder = [...list.querySelectorAll('.cat-accordion')].map(a => a.dataset.catId).filter(Boolean);
+        const allCats = CATS.slice().sort((a,b) => (a.priority||0) - (b.priority||0));
+        let changed = false;
+        newOrder.forEach((id, i) => {
+          const cat = allCats.find(c => c.id === id);
+          if(cat && cat.priority !== i) { cat.priority = i; changed = true; }
+        });
+        if(changed) {
+          await Promise.all(allCats.map(c => sb.from('categories').update({ priority: c.priority }).eq('id', c.id)));
+          // Re-sort CATS in memory
+          CATS.sort((a,b) => (a.priority||0) - (b.priority||0));
         }
+
+        // Brief timeout so click doesn't fire
+        setTimeout(() => { _dragging = false; }, 50);
       };
 
       dragHandle.addEventListener('pointermove', onMove);
       dragHandle.addEventListener('pointerup', onUp);
     });
+
+    // Block accordion toggle if we just finished a drag
+    catHeader.addEventListener('click', e => {
+      if(_dragging) { e.stopImmediatePropagation(); }
+    }, true);
     
     const catBody = mk('div', 'cat-body');
     
